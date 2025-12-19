@@ -1,0 +1,20 @@
+[
+  {
+    "username": "charlie",
+    "password": "charlie123",
+    "fullName": "Charlie Nguyen",
+    "email": "charlie@skillsharex.com"
+  },
+  {
+    "username": "diana",
+    "password": "diana456",
+    "fullName": "Diana Patel",
+    "email": "diana@skillsharex.com"
+  },
+  {
+    "username": "eve",
+    "password": "eve789",
+    "fullName": "Eve Johnson",
+    "email": "eve@skillsharex.com"
+  }
+]

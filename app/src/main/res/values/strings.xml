@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">skillsharex</string>
+    <string name="splash_tagline">Learn and share skills</string>
+    <string name="get_started">Get Started</string>
+</resources>
