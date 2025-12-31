@@ -9,7 +9,8 @@ data class Course(
     val category: String,
     val lessonsCount: Int,
     val level: String,
-    val thumbnail: Int
+    val thumbnail: Int,
+    val image_path: String
 )
 
 data class Mentor(

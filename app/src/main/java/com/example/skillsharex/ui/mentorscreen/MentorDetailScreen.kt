@@ -1,10 +1,7 @@
 package com.example.skillsharex.ui.mentor
 
 import android.widget.Toast
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -14,7 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,17 +23,27 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.skillsharex.R
-import com.example.skillsharex.Screen
 import com.example.skillsharex.data.sampleMentorDetails
 
-// THEME
+/* ---------------- THEME ---------------- */
+
 private val Lavender = Color(0xFFE8E6FF)
 private val HeaderPurple = Color(0xFF544DCA)
-private val Gradient = Brush.horizontalGradient(listOf(Color(0xFF6C47FF), Color(0xFF4BC9FF)))
+private val Gradient = Brush.horizontalGradient(
+    listOf(Color(0xFF6C47FF), Color(0xFF4BC9FF))
+)
+
+/* ---------------- MENTOR DETAIL SCREEN ---------------- */
 
 @Composable
-fun MentorDetailScreen(navController: NavController, mentorId: String) {
+fun MentorDetailScreen(
+    navController: NavController
+) {
+
+    val mentorId = navController
+        .currentBackStackEntry
+        ?.arguments
+        ?.getString("mentorId")
 
     val mentor = sampleMentorDetails.firstOrNull { it.mentorId == mentorId }
     val context = LocalContext.current
@@ -57,10 +64,8 @@ fun MentorDetailScreen(navController: NavController, mentorId: String) {
                     .background(HeaderPurple)
                     .padding(top = 46.dp, bottom = 20.dp, start = 16.dp)
             ) {
-
                 Row(verticalAlignment = Alignment.CenterVertically) {
 
-                    // 🔥 FIXED: ALWAYS VISIBLE ARROW (NOT DRAWABLE)
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
@@ -70,7 +75,7 @@ fun MentorDetailScreen(navController: NavController, mentorId: String) {
                         )
                     }
 
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(Modifier.width(10.dp))
 
                     Text(
                         mentor.name,
@@ -81,21 +86,28 @@ fun MentorDetailScreen(navController: NavController, mentorId: String) {
                 }
             }
         }
-    ) { inner ->
+    ) { innerPadding ->
 
         LazyColumn(
-            modifier = Modifier.padding(inner).padding(horizontal = 16.dp)
+            modifier = Modifier
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp)
         ) {
 
+            /* -------- PROFILE -------- */
             item {
                 Spacer(Modifier.height(22.dp))
 
-                // PROFILE
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
                     Image(
                         painter = painterResource(mentor.profileImageRes),
                         contentDescription = null,
-                        modifier = Modifier.size(120.dp).clip(CircleShape)
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
                     )
 
                     Spacer(Modifier.height(10.dp))
@@ -108,26 +120,26 @@ fun MentorDetailScreen(navController: NavController, mentorId: String) {
                 }
             }
 
-            // ABOUT
+            /* -------- ABOUT -------- */
             item {
                 SectionTitle("About Mentor")
                 Text(mentor.bio, color = Color.DarkGray)
                 Spacer(Modifier.height(14.dp))
             }
 
-            // SKILLS
+            /* -------- SKILLS -------- */
             item {
                 SectionTitle("Skills & Expertise")
 
                 LazyRow {
-                    items(mentor.expertiseList) { s ->
+                    items(mentor.expertiseList) { skill ->
                         Box(
                             modifier = Modifier
                                 .padding(end = 10.dp)
                                 .background(Gradient, RoundedCornerShape(20.dp))
                                 .padding(horizontal = 14.dp, vertical = 8.dp)
                         ) {
-                            Text(s, color = Color.White)
+                            Text(skill, color = Color.White)
                         }
                     }
                 }
@@ -135,42 +147,33 @@ fun MentorDetailScreen(navController: NavController, mentorId: String) {
                 Spacer(Modifier.height(20.dp))
             }
 
-            // COURSES
-            item { SectionTitle("Courses by Mentor") }
-
-            items(mentor.courses) { c ->
-                CourseCard(
-                    title = c.title,
-                    rating = c.rating,
-                    img = c.thumbnailRes,
-                    onClick = { navController.navigate("overview/${c.courseId}") }
-                )
-                Spacer(Modifier.height(14.dp))
-            }
-
-            // REVIEWS
+            /* -------- REVIEWS -------- */
             item { SectionTitle("Learner Reviews") }
 
-            items(mentor.reviews) { r ->
-                ReviewCard(r.reviewerName, r.rating, r.comment)
+            items(mentor.reviews) { review ->
+                ReviewCard(
+                    review.reviewerName,
+                    review.rating,
+                    review.comment
+                )
                 Spacer(Modifier.height(10.dp))
             }
 
-            // BUTTONS
+            /* -------- ACTION BUTTONS -------- */
             item {
 
                 Spacer(Modifier.height(20.dp))
 
-                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
 
-                    SolidButton("Request Mentorship", Modifier.fillMaxWidth(0.9f)) {
+                    SolidButton(
+                        text = "Request Mentorship",
+                        modifier = Modifier.fillMaxWidth(0.9f)
+                    ) {
                         Toast.makeText(context, "Request Sent!", Toast.LENGTH_SHORT).show()
-                    }
-
-                    Spacer(Modifier.height(14.dp))
-
-                    OutlineButton("Mentorship Requests", Modifier.fillMaxWidth(0.9f)) {
-                        navController.navigate(Screen.Requests.route)
                     }
 
                     Spacer(Modifier.height(20.dp))
@@ -186,52 +189,44 @@ fun MentorDetailScreen(navController: NavController, mentorId: String) {
 
                         Spacer(Modifier.width(12.dp))
 
-                        OutlineButton("Book Call", Modifier.weight(1f)) {}
+                        OutlineButton("Book Call", Modifier.weight(1f)) {
+                            // Future call screen
+                        }
                     }
 
                     Spacer(Modifier.height(26.dp))
                 }
+                Spacer(Modifier.height(12.dp))
+
+                Button(
+                    onClick = {
+                        navController.navigate("requests")
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth(0.9f),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Text(
+                        text = "View Mentorship Requests",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
             }
         }
     }
 }
 
-// COMPONENTS
-@Composable
-fun SectionTitle(t: String) {
-    Text(t, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.padding(vertical = 6.dp))
-}
+/* ---------------- COMPONENTS ---------------- */
 
 @Composable
-fun CourseCard(title: String, rating: Double, img: Int, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(16.dp))
-            .clickable { onClick() }
-            .padding(12.dp)
-    ) {
-        Image(
-            painter = painterResource(img),
-            contentDescription = null,
-            modifier = Modifier.size(70.dp).clip(RoundedCornerShape(12.dp))
-        )
-
-        Spacer(Modifier.width(14.dp))
-
-        Column(Modifier.weight(1f)) {
-            Text(title, fontWeight = FontWeight.Bold)
-            Text("⭐ $rating", color = Color(0xFFFFC107))
-        }
-
-        Box(
-            modifier = Modifier
-                .background(Gradient, RoundedCornerShape(12.dp))
-                .padding(horizontal = 14.dp, vertical = 8.dp)
-        ) {
-            Text("View", color = Color.White)
-        }
-    }
+fun SectionTitle(title: String) {
+    Text(
+        title,
+        fontWeight = FontWeight.Bold,
+        fontSize = 18.sp,
+        modifier = Modifier.padding(vertical = 6.dp)
+    )
 }
 
 @Composable

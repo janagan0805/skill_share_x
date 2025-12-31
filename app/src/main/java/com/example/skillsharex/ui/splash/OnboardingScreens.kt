@@ -27,9 +27,10 @@ import com.example.skillsharex.R
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun OnboardingPager(
+fun OnboardingScreen(
     onFinish: () -> Unit,
-    onNavigateToAuth: (Boolean) -> Unit
+    // ✅ DEFAULT VALUE ADDED (THIS FIXES AppNavHost ERROR)
+    onNavigateToAuth: (Boolean) -> Unit = {}
 ) {
     var page by remember { mutableStateOf(0) }
 

@@ -19,8 +19,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.skillsharex.R
-import com.example.skillsharex.Screen
 import com.example.skillsharex.data.sampleMentorDetails
 import com.example.skillsharex.model.MentorDetail
 
@@ -47,7 +45,7 @@ fun MentorListScreen(navController: NavController) {
 
         Column(modifier = Modifier.fillMaxSize()) {
 
-            // ---------- HEADER ----------
+            /* ---------- HEADER ---------- */
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -58,7 +56,6 @@ fun MentorListScreen(navController: NavController) {
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
 
-                    // BACK ICON ✔
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
                         contentDescription = "Back",
@@ -81,30 +78,34 @@ fun MentorListScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // ---------- SEARCH BAR ----------
-            Box(
+            /* ---------- SEARCH BAR (FIXED) ---------- */
+            TextField(
+                value = searchText,
+                onValueChange = { searchText = it },
+                placeholder = { Text("Search mentors…") },
                 modifier = Modifier
                     .padding(horizontal = 18.dp)
-                    .fillMaxWidth()
-                    .background(Color.White, RoundedCornerShape(18.dp))
-                    .border(1.dp, BorderBlue, RoundedCornerShape(18.dp))
-                    .padding(14.dp)
-            ) {
-                Text(
-                    text = if (searchText.isEmpty()) "Search mentors…" else searchText,
-                    color = Color.Gray
+                    .fillMaxWidth(),
+                singleLine = true,
+                shape = RoundedCornerShape(18.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.White,
+                    unfocusedContainerColor = Color.White,
+                    focusedIndicatorColor = BorderBlue,
+                    unfocusedIndicatorColor = BorderBlue
                 )
-            }
+            )
+
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // ---------- FILTER DATA ----------
+            /* ---------- FILTER DATA (WORKING) ---------- */
             val filteredList = sampleMentorDetails.filter {
-                it.name.contains(searchText, true) ||
-                        it.skill.contains(searchText, true)
+                it.name.contains(searchText, ignoreCase = true) ||
+                        it.skill.contains(searchText, ignoreCase = true)
             }
 
-            // ---------- MENTOR LIST ----------
+            /* ---------- MENTOR LIST (FIXED NAVIGATION) ---------- */
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -114,9 +115,8 @@ fun MentorListScreen(navController: NavController) {
                     MentorCard(
                         mentor = mentor,
                         onClick = {
-                            navController.navigate(
-                                Screen.MentorDetail.route.replace("{mentorId}", mentor.mentorId)
-                            )
+                            // ✅ FINAL & CORRECT NAVIGATION
+                            navController.navigate("mentorDetail/${mentor.mentorId}")
                         }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -128,10 +128,13 @@ fun MentorListScreen(navController: NavController) {
     }
 }
 
+/* ---------- MENTOR CARD ---------- */
 
-// ---------- MENTOR CARD ----------
 @Composable
-fun MentorCard(mentor: MentorDetail, onClick: () -> Unit) {
+fun MentorCard(
+    mentor: MentorDetail,
+    onClick: () -> Unit
+) {
 
     Card(
         modifier = Modifier
@@ -147,7 +150,6 @@ fun MentorCard(mentor: MentorDetail, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // PROFILE IMAGE
             Image(
                 painter = painterResource(id = mentor.profileImageRes),
                 contentDescription = null,
@@ -176,7 +178,6 @@ fun MentorCard(mentor: MentorDetail, onClick: () -> Unit) {
                 )
             }
 
-            // VIEW BUTTON
             Box(
                 modifier = Modifier
                     .background(GradientBtn, RoundedCornerShape(14.dp))

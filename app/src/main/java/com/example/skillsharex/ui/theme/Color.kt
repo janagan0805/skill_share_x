@@ -21,5 +21,5 @@ val PrimaryBlueDark = Color(0xFF0E0E15)
 val PrimaryBlueLight = Color(0xFF673AB7)
 
 val BackgroundLight = Color(0xFF565693)
-val TextPrimary = Color(0xFF111010)
-val TextSecondary = Color(0xFF0D0D0E)
+val TextPrimary = Color(0xFFF6F2F2)
+val TextSecondary = Color(0xFFF0F0F8)

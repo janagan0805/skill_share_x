@@ -21,8 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.skillsharex.R
-import com.example.skillsharex.Screen
+import com.example.skillsharex.navigation.Screen
 
+/* ---------------- THEME COLORS (UNCHANGED) ---------------- */
 private val LavenderBg = Color(0xFFE8E6FF)
 private val HeaderPurple = Color(0xFF544DCA)
 private val PrimaryBlue = Color(0xFF1022FF)
@@ -32,9 +33,20 @@ fun EditProfileScreen(
     navController: NavController
 ) {
 
+    /* ---------------- PROFILE STATES ---------------- */
     var name by remember { mutableStateOf("Jana") }
     var role by remember { mutableStateOf("Mentor • UI/UX & Development") }
     var bio by remember { mutableStateOf("Helping learners grow in Design & Tech 🚀") }
+
+    /* 🔥 Dynamic skills list */
+    val skills = remember {
+        mutableStateListOf(
+            "JavaScript",
+            "React.js",
+            "Node.js"
+        )
+    }
+    var newSkill by remember { mutableStateOf("") }
 
     Box(
         modifier = Modifier
@@ -44,7 +56,7 @@ fun EditProfileScreen(
 
         Column {
 
-            // ---------------- HEADER ----------------
+            /* ---------------- HEADER ---------------- */
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -79,13 +91,14 @@ fun EditProfileScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // ---------------- PROFILE PHOTO ----------------
+            /* ---------------- PROFILE PHOTO (UNCHANGED) ---------------- */
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
                 Box(modifier = Modifier.size(120.dp)) {
+
                     Image(
                         painter = painterResource(id = R.drawable.jana),
                         contentDescription = null,
@@ -111,9 +124,10 @@ fun EditProfileScreen(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // ---------------- INPUT FIELDS ----------------
+            /* ---------------- FORM SECTION ---------------- */
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
 
+                /* ---------- NAME ---------- */
                 Text("Full Name", fontWeight = FontWeight.SemiBold, color = PrimaryBlue)
                 OutlinedTextField(
                     value = name,
@@ -124,6 +138,7 @@ fun EditProfileScreen(
                     shape = RoundedCornerShape(14.dp)
                 )
 
+                /* ---------- ROLE ---------- */
                 Text("Role / Position", fontWeight = FontWeight.SemiBold, color = PrimaryBlue)
                 OutlinedTextField(
                     value = role,
@@ -134,7 +149,8 @@ fun EditProfileScreen(
                     shape = RoundedCornerShape(14.dp)
                 )
 
-                Text("Bio", fontWeight = FontWeight.SemiBold, color = PrimaryBlue)
+                /* ---------- BIO ---------- */
+                Text("Bio / About", fontWeight = FontWeight.SemiBold, color = PrimaryBlue)
                 OutlinedTextField(
                     value = bio,
                     onValueChange = { bio = it },
@@ -144,12 +160,64 @@ fun EditProfileScreen(
                         .padding(bottom = 20.dp),
                     shape = RoundedCornerShape(14.dp)
                 )
+
+                /* ---------------- SKILLS SECTION (NEW) ---------------- */
+                Text(
+                    text = "Skills",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = PrimaryBlue
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    skills.forEach { skill ->
+                        SkillChip(
+                            skill = skill,
+                            onRemove = { skills.remove(skill) }
+                        )
+                    }
+                }
+
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+
+                    OutlinedTextField(
+                        value = newSkill,
+                        onValueChange = { newSkill = it },
+                        modifier = Modifier.weight(1f),
+                        placeholder = { Text("Add skill") },
+                        shape = RoundedCornerShape(14.dp)
+                    )
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Button(
+                        onClick = {
+                            if (newSkill.isNotBlank()) {
+                                skills.add(newSkill.trim())
+                                newSkill = ""
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(PrimaryBlue)
+                    ) {
+                        Text("+ Add", color = Color.White)
+                    }
+                }
             }
 
-            // ---------------- SAVE BUTTON ----------------
+            Spacer(modifier = Modifier.height(30.dp))
+
+            /* ---------------- SAVE BUTTON ---------------- */
             Button(
                 onClick = {
-                    // TODO: save to backend / local storage later
+                    // 🔜 Backend API integration here
                     navController.navigate(Screen.Profile.route) {
                         popUpTo(Screen.Profile.route) { inclusive = true }
                     }
@@ -163,6 +231,31 @@ fun EditProfileScreen(
             ) {
                 Text("Save Changes", color = Color.White, fontSize = 18.sp)
             }
+        }
+    }
+}
+
+/* ---------------- SKILL CHIP ---------------- */
+@Composable
+fun SkillChip(
+    skill: String,
+    onRemove: () -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(20.dp),
+        color = HeaderPurple.copy(alpha = 0.15f)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+        ) {
+            Text(skill, fontSize = 14.sp)
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = "✕",
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable { onRemove() }
+            )
         }
     }
 }

@@ -19,7 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.skillsharex.Screen
+import com.example.skillsharex.navigation.Screen
 
 /* ---------------- THEME COLORS ---------------- */
 
@@ -74,7 +74,8 @@ fun CommunityScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    navController.navigate(Screen.CreatePost.route)
+                    navController.navigate("createPost")
+
                 },
                 containerColor = PrimaryBlue
             ) {
@@ -145,6 +146,7 @@ fun CommunityScreen(
                             .size(26.dp)
                             .clickable {
                                 navController.navigate(Screen.SkillFilter.route)
+
                             }
                     )
                 }
