@@ -1,20 +1,22 @@
-package com.example.skillsharex.network
+package com.example.skillsharex.ui.community
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import com.example.skillsharex.network.AuthApiClient
 
-
-object AuthApiClient {
+object CommunityService {
 
     private const val BASE_URL =
         "http://192.168.128.111/skillsharex_backend/api/"
 
-    val api: AuthApi by lazy {
+    private val api: CommunityApi by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(AuthApi::class.java)
+            .create(CommunityApi::class.java)
+    }
+
+    val repository: CommunityRepository by lazy {
+        CommunityRepository(api)
     }
 }

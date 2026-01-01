@@ -27,63 +27,27 @@ private val LavenderBg = Color(0xFFE8E6FF)
 private val HeaderPurple = Color(0xFF544DCA)
 private val PrimaryBlue = Color(0xFF1022FF)
 
-/* ---------------- DATA MODEL ---------------- */
-
-data class CommunityPost(
-    val name: String,
-    val role: String,
-    val content: String,
-    val tag: String
-)
-
 /* ---------------- COMMUNITY SCREEN ---------------- */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CommunityScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: CommunityViewModel
 ) {
 
-    val posts = remember {
-        listOf(
-            CommunityPost(
-                "Arun",
-                "Android Learner",
-                "How to structure MVVM properly in Android?",
-                "Android"
-            ),
-            CommunityPost(
-                "Priya",
-                "UI/UX Mentor",
-                "Tip: Always design mobile first before desktop 🎨",
-                "UI/UX"
-            ),
-            CommunityPost(
-                "Karthik",
-                "Java Developer",
-                "Difference between abstract class and interface?",
-                "Java"
-            )
-        )
+    LaunchedEffect(Unit) {
+        viewModel.loadPosts()
     }
 
     Scaffold(
         containerColor = LavenderBg,
-
-        /* ---------- FAB → CREATE POST ---------- */
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {
-                    navController.navigate("createPost")
-
-                },
+                onClick = { navController.navigate("createPost") },
                 containerColor = PrimaryBlue
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Create Post",
-                    tint = Color.White
-                )
+                Icon(Icons.Default.Add, contentDescription = "Create Post", tint = Color.White)
             }
         }
     ) { innerPadding ->
@@ -94,19 +58,14 @@ fun CommunityScreen(
                 .fillMaxSize()
         ) {
 
-            /* ---------- HEADER WITH BACK + FILTER ---------- */
+            /* ---------- HEADER ---------- */
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(HeaderPurple)
                     .clip(RoundedCornerShape(bottomStart = 25.dp, bottomEnd = 25.dp))
-                    .padding(
-                        top = 50.dp,
-                        bottom = 20.dp,
-                        start = 16.dp,
-                        end = 16.dp
-                    )
+                    .padding(top = 50.dp, bottom = 20.dp, start = 16.dp, end = 16.dp)
             ) {
 
                 Row(
@@ -146,7 +105,6 @@ fun CommunityScreen(
                             .size(26.dp)
                             .clickable {
                                 navController.navigate(Screen.SkillFilter.route)
-
                             }
                     )
                 }
@@ -157,23 +115,21 @@ fun CommunityScreen(
             /* ---------- COMMUNITY FEED ---------- */
 
             LazyColumn(
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    bottom = 100.dp
-                )
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 100.dp)
             ) {
-                items(posts) { post ->
+                items(viewModel.posts) { post ->
                     CommunityPostCard(
                         post = post,
                         onPostClick = {
                             navController.navigate(
-                                Screen.PostDetail.route
-                                    .replace("{title}", post.content)
+                                Screen.PostDetail.route.replace("{title}", post.content)
                             )
                         },
                         onSkillClick = {
                             navController.navigate(Screen.SkillFilter.route)
+                        },
+                        onLikeClick = {
+                            viewModel.toggleLike(post.post_id)
                         }
                     )
                 }
@@ -186,9 +142,10 @@ fun CommunityScreen(
 
 @Composable
 fun CommunityPostCard(
-    post: CommunityPost,
+    post: Post,
     onPostClick: () -> Unit,
-    onSkillClick: () -> Unit
+    onSkillClick: () -> Unit,
+    onLikeClick: () -> Unit
 ) {
 
     Card(
@@ -218,44 +175,32 @@ fun CommunityPostCard(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                Column {
-                    Text(
-                        text = post.name,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = post.role,
-                        fontSize = 12.sp,
-                        color = Color.Gray
-                    )
-                }
+                Text("User", fontWeight = FontWeight.Bold)
 
                 Spacer(modifier = Modifier.weight(1f))
 
                 AssistChip(
                     onClick = onSkillClick,
-                    label = { Text(post.tag, fontSize = 11.sp) }
+                    label = { Text("Skill", fontSize = 11.sp) }
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text(
-                text = post.content,
-                fontSize = 14.sp,
-                color = Color.Black
-            )
+            Text(post.content, fontSize = 14.sp)
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                 Icon(
-                    imageVector = Icons.Default.FavoriteBorder,
+                    imageVector = if (post.is_liked)
+                        Icons.Default.Favorite
+                    else Icons.Default.FavoriteBorder,
                     contentDescription = "Like",
-                    tint = PrimaryBlue
+                    tint = PrimaryBlue,
+                    modifier = Modifier.clickable { onLikeClick() }
                 )
+
                 Icon(
                     imageVector = Icons.Default.ChatBubbleOutline,
                     contentDescription = "Comment",

@@ -34,8 +34,9 @@ fun AppNavHost() {
     val context = LocalContext.current
     val session = SessionManager(context)
 
-    // 🔥 SHARED PROFILE VIEWMODEL (FRONTEND STATE)
+    // 🔥 SHARED VIEWMODELS
     val profileViewModel: ProfileViewModel = viewModel()
+    val communityViewModel: CommunityViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -83,7 +84,6 @@ fun AppNavHost() {
                 onLoginSuccess = { userName ->
                     session.saveUserName(userName)
                     session.setLoggedIn(true)
-
                     navController.navigate("home") {
                         popUpTo("login") { inclusive = true }
                     }
@@ -113,7 +113,14 @@ fun AppNavHost() {
         /* -------- MAIN -------- */
         composable("home") { HomeDashboardScreen(navController) }
         composable("mentors") { MentorListScreen(navController) }
-        composable("community") { CommunityScreen(navController) }
+
+        /* ✅ COMMUNITY (UPDATED – ViewModel injected) */
+        composable("community") {
+            CommunityScreen(
+                navController = navController,
+                viewModel = communityViewModel
+            )
+        }
 
         composable("profile") {
             ProfileScreen(
@@ -125,7 +132,7 @@ fun AppNavHost() {
         composable("settings") { SettingsScreen(navController) }
         composable("notifications") { NotificationsScreen(navController) }
 
-        /* -------- EDIT PROFILE (FIXED) -------- */
+        /* -------- EDIT PROFILE -------- */
         composable(Screen.EditProfile.route) {
             EditProfileScreen(
                 navController = navController,
@@ -160,9 +167,7 @@ fun AppNavHost() {
             SessionScreen(navController)
         }
 
-        composable(
-            "sessionDetail/{sessionId}"
-        ) { backStackEntry ->
+        composable("sessionDetail/{sessionId}") { backStackEntry ->
             SessionDetailScreen(
                 navController = navController,
                 sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
@@ -197,7 +202,13 @@ fun AppNavHost() {
             )
         }
 
-        composable("createPost") { CreatePostScreen(navController) }
+        /* ✅ CREATE POST (UPDATED – ViewModel injected) */
+        composable("createPost") {
+            CreatePostScreen(
+                navController = navController,
+                viewModel = communityViewModel
+            )
+        }
 
         composable(
             route = "post_detail/{postTitle}",

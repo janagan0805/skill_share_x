@@ -111,7 +111,8 @@ fun LiveSessionScreen(
 
                 OutlinedButton(
                     onClick = {
-                        navController.navigate("chat")
+                        navController.navigate("chat/1")
+
                     }
                 ) {
                     Icon(Icons.Default.Chat, contentDescription = null)

@@ -16,7 +16,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.skillsharex.navigation.Screen
 
 /* ---------------- THEME COLORS ---------------- */
 
@@ -29,7 +28,8 @@ private val PrimaryBlue = Color(0xFF1022FF)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreatePostScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: CommunityViewModel
 ) {
 
     var selectedType by remember { mutableStateOf("Question") }
@@ -57,17 +57,10 @@ fun CreatePostScreen(
                     .fillMaxWidth()
                     .background(HeaderPurple)
                     .clip(RoundedCornerShape(bottomStart = 25.dp, bottomEnd = 25.dp))
-                    .padding(
-                        top = 50.dp,
-                        bottom = 20.dp,
-                        start = 16.dp,
-                        end = 16.dp
-                    )
+                    .padding(top = 50.dp, bottom = 20.dp, start = 16.dp, end = 16.dp)
             ) {
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
 
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
@@ -75,9 +68,7 @@ fun CreatePostScreen(
                         tint = Color.White,
                         modifier = Modifier
                             .size(28.dp)
-                            .clickable {
-                                navController.popBackStack()
-                            }
+                            .clickable { navController.popBackStack() }
                     )
 
                     Spacer(modifier = Modifier.width(12.dp))
@@ -101,31 +92,20 @@ fun CreatePostScreen(
                     .fillMaxWidth()
             ) {
 
-                /* ---- Post Type ---- */
                 Text("Post Type", fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(6.dp))
 
-                DropdownField(
-                    selectedValue = selectedType,
-                    options = postTypes,
-                    onSelected = { selectedType = it }
-                )
+                DropdownField(selectedType, postTypes) { selectedType = it }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                /* ---- Skill ---- */
                 Text("Skill Category", fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(6.dp))
 
-                DropdownField(
-                    selectedValue = selectedSkill,
-                    options = skills,
-                    onSelected = { selectedSkill = it }
-                )
+                DropdownField(selectedSkill, skills) { selectedSkill = it }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                /* ---- Title ---- */
                 Text("Title (optional)", fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -139,7 +119,6 @@ fun CreatePostScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                /* ---- Description ---- */
                 Text("Description", fontWeight = FontWeight.SemiBold)
                 Spacer(modifier = Modifier.height(6.dp))
 
@@ -155,10 +134,10 @@ fun CreatePostScreen(
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                /* ---- POST BUTTON ---- */
+                /* ---- POST BUTTON (UPDATED) ---- */
                 Button(
                     onClick = {
-                        // TODO: Save post (later backend)
+                        viewModel.createPost(description)
                         navController.popBackStack()
                     },
                     modifier = Modifier
@@ -178,7 +157,6 @@ fun CreatePostScreen(
         }
     }
 }
-
 /* ---------------- DROPDOWN FIELD ---------------- */
 
 @OptIn(ExperimentalMaterial3Api::class)
