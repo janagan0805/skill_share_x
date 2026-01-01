@@ -2,37 +2,30 @@ package com.example.skillsharex.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.example.skillsharex.ui.*
+import com.example.skillsharex.ui.call.CallScreen
 import com.example.skillsharex.ui.chat.ChatScreen
-import com.example.skillsharex.ui.community.CommunityScreen
-import com.example.skillsharex.ui.community.CreatePostScreen
-import com.example.skillsharex.ui.community.PostDetailScreen
-import com.example.skillsharex.ui.community.SkillFilterScreen
+import com.example.skillsharex.ui.community.*
 import com.example.skillsharex.ui.forgot.ForgotPasswordScreen
 import com.example.skillsharex.ui.home.HomeDashboardScreen
-import com.example.skillsharex.ui.mentor.MentorDetailScreen
-import com.example.skillsharex.ui.mentor.MentorListScreen
+import com.example.skillsharex.ui.login.LoginScreen
+import com.example.skillsharex.ui.mentor.*
 import com.example.skillsharex.ui.notifications.NotificationsScreen
 import com.example.skillsharex.ui.profile.EditProfileScreen
 import com.example.skillsharex.ui.profile.ProfileScreen
-import com.example.skillsharex.ui.settings.SettingsScreen
-import com.example.skillsharex.ui.splash.AppSplashScreen
-import com.example.skillsharex.utils.SessionManager
-import com.example.skillsharex.ui.login.LoginScreen
-import com.example.skillsharex.ui.session.SessionListScreen
-import com.example.skillsharex.ui.sessions.SessionDetailScreen
-import com.example.skillsharex.ui.sessions.SessionScreen
-import com.example.skillsharex.ui.signup.SignUpScreen
-import com.example.skillsharex.ui.splash.OnboardingScreen
-import androidx.navigation.navArgument
-import com.example.skillsharex.ui.session.LiveSessionScreen
-import com.example.skillsharex.ui.session.SessionOverviewScreen
-import com.example.skillsharex.ui.call.CallScreen
+import com.example.skillsharex.ui.profile.ProfileViewModel
 import com.example.skillsharex.ui.requests.MentorshipRequestsScreen
-
+import com.example.skillsharex.ui.session.*
+import com.example.skillsharex.ui.sessions.*
+import com.example.skillsharex.ui.settings.SettingsScreen
+import com.example.skillsharex.ui.signup.SignUpScreen
+import com.example.skillsharex.ui.splash.AppSplashScreen
+import com.example.skillsharex.ui.splash.OnboardingScreen
+import com.example.skillsharex.utils.SessionManager
 
 @Composable
 fun AppNavHost() {
@@ -40,6 +33,9 @@ fun AppNavHost() {
     val navController = rememberNavController()
     val context = LocalContext.current
     val session = SessionManager(context)
+
+    // 🔥 SHARED PROFILE VIEWMODEL (FRONTEND STATE)
+    val profileViewModel: ProfileViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -68,6 +64,7 @@ fun AppNavHost() {
                 }
             }
         }
+
         /* -------- ONBOARDING -------- */
         composable("onboarding") {
             OnboardingScreen(
@@ -80,10 +77,10 @@ fun AppNavHost() {
             )
         }
 
-        /* -------- login -------- */
+        /* -------- LOGIN -------- */
         composable("login") {
             LoginScreen(
-                onLoginSuccess = { userName: String ->
+                onLoginSuccess = { userName ->
                     session.saveUserName(userName)
                     session.setLoggedIn(true)
 
@@ -91,17 +88,10 @@ fun AppNavHost() {
                         popUpTo("login") { inclusive = true }
                     }
                 },
-                onSignUpClick = {
-                    navController.navigate("signup")
-                },
-                onForgotPasswordClick = {
-                    navController.navigate("forgotPassword")
-                }
+                onSignUpClick = { navController.navigate("signup") },
+                onForgotPasswordClick = { navController.navigate("forgotPassword") }
             )
         }
-
-
-
 
         composable("signup") {
             SignUpScreen(
@@ -120,14 +110,28 @@ fun AppNavHost() {
             )
         }
 
-        /* -------- MAIN APP -------- */
+        /* -------- MAIN -------- */
         composable("home") { HomeDashboardScreen(navController) }
         composable("mentors") { MentorListScreen(navController) }
         composable("community") { CommunityScreen(navController) }
-        composable("createPost") { CreatePostScreen(navController) }
-        composable("profile") { ProfileScreen(navController) }
+
+        composable("profile") {
+            ProfileScreen(
+                navController = navController,
+                viewModel = profileViewModel
+            )
+        }
+
         composable("settings") { SettingsScreen(navController) }
         composable("notifications") { NotificationsScreen(navController) }
+
+        /* -------- EDIT PROFILE (FIXED) -------- */
+        composable(Screen.EditProfile.route) {
+            EditProfileScreen(
+                navController = navController,
+                viewModel = profileViewModel
+            )
+        }
 
         /* -------- DETAILS -------- */
         composable(
@@ -136,10 +140,10 @@ fun AppNavHost() {
         ) {
             MentorDetailScreen(navController)
         }
+
         composable(Screen.Requests.route) {
             MentorshipRequestsScreen(navController)
         }
-
 
         composable(
             "chat/{mentorId}",
@@ -147,76 +151,38 @@ fun AppNavHost() {
         ) {
             ChatScreen(navController)
         }
-        composable("createPost") {
-            CreatePostScreen(navController)
-        }
-        composable(Screen.SkillFilter.route) {
-            SkillFilterScreen(navController)
-        }
 
-        composable("chat") {
-            ChatScreen(navController)
-        }
         composable("call") {
             CallScreen(navController)
         }
 
-
-        composable(
-            route = "post_detail/{postTitle}",
-            arguments = listOf(
-                navArgument("postTitle") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-
-            val postTitle =
-                backStackEntry.arguments?.getString("postTitle") ?: ""
-
-            PostDetailScreen(
-                navController = navController,
-                postTitle = postTitle
-            )
-        }
-        composable("editProfile") {
-            EditProfileScreen(navController)
-        }
         composable("sessions") {
             SessionScreen(navController)
         }
-        composable("sessionDetail/{sessionId}") { backStackEntry ->
+
+        composable(
+            "sessionDetail/{sessionId}"
+        ) { backStackEntry ->
             SessionDetailScreen(
                 navController = navController,
                 sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             )
         }
-        composable(
-            "chat/{mentorId}",
-            arguments = listOf(navArgument("mentorId") { type = NavType.StringType })
-        ) {
-            ChatScreen(navController)
-        }
+
         composable(Screen.SessionList.route) {
             SessionListScreen(navController)
         }
 
         composable(
             route = "session_overview/{sessionId}",
-            arguments = listOf(
-                navArgument("sessionId") {
-                    type = NavType.StringType
-                }
-            )
+            arguments = listOf(navArgument("sessionId") {
+                type = NavType.StringType
+            })
         ) { backStackEntry ->
-
-            val sessionId = backStackEntry.arguments?.getString("sessionId")
-
             SessionOverviewScreen(
                 navController = navController,
-                sessionId = sessionId ?: ""
+                sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             )
-        }
-        composable(Screen.EditProfile.route) {
-            EditProfileScreen(navController = navController)
         }
 
         composable(
@@ -230,6 +196,23 @@ fun AppNavHost() {
                 sessionId = it.arguments?.getString("sessionId") ?: ""
             )
         }
+
+        composable("createPost") { CreatePostScreen(navController) }
+
+        composable(
+            route = "post_detail/{postTitle}",
+            arguments = listOf(navArgument("postTitle") {
+                type = NavType.StringType
+            })
+        ) { backStackEntry ->
+            PostDetailScreen(
+                navController = navController,
+                postTitle = backStackEntry.arguments?.getString("postTitle") ?: ""
+            )
+        }
+
+        composable(Screen.SkillFilter.route) {
+            SkillFilterScreen(navController)
+        }
     }
 }
-

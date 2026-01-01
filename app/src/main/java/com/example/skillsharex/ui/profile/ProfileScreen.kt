@@ -34,9 +34,14 @@ import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import com.example.skillsharex.ui.profile.ProfileViewModel
+
 
 @Composable
-fun ProfileScreen(navController: NavController) {
+fun ProfileScreen(
+    navController: NavController,
+    viewModel: ProfileViewModel
+) {
 
     val context = LocalContext.current
     val session = SessionManager(context)
@@ -68,8 +73,8 @@ fun ProfileScreen(navController: NavController) {
 
         Spacer(Modifier.height(20.dp))
 
-        ProfileHeader()
-        SkillSection()
+        ProfileHeader(viewModel)
+        SkillSection(viewModel)
         StatsRow()
 
         Spacer(Modifier.height(20.dp))
@@ -134,7 +139,7 @@ fun ProfileScreen(navController: NavController) {
 /* ---------------- PROFILE HEADER ---------------- */
 
 @Composable
-fun ProfileHeader() {
+fun ProfileHeader(viewModel: ProfileViewModel) {
 
     val context = LocalContext.current
     val session = SessionManager(context)
@@ -325,7 +330,7 @@ fun CourseRow(course: Course) {
 /* ---------------- SKILLS ---------------- */
 
 @Composable
-fun SkillSection() {
+fun SkillSection(viewModel: ProfileViewModel) {
     val skills = listOf("UI/UX", "Java", "Figma", "Photoshop")
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
         skills.forEach {

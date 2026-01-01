@@ -4,6 +4,8 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,29 +25,17 @@ import androidx.navigation.NavController
 import com.example.skillsharex.R
 import com.example.skillsharex.navigation.Screen
 
-/* ---------------- THEME COLORS (UNCHANGED) ---------------- */
+/* ---------------- THEME COLORS ---------------- */
 private val LavenderBg = Color(0xFFE8E6FF)
 private val HeaderPurple = Color(0xFF544DCA)
 private val PrimaryBlue = Color(0xFF1022FF)
 
 @Composable
 fun EditProfileScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: ProfileViewModel
 ) {
 
-    /* ---------------- PROFILE STATES ---------------- */
-    var name by remember { mutableStateOf("Jana") }
-    var role by remember { mutableStateOf("Mentor • UI/UX & Development") }
-    var bio by remember { mutableStateOf("Helping learners grow in Design & Tech 🚀") }
-
-    /* 🔥 Dynamic skills list */
-    val skills = remember {
-        mutableStateListOf(
-            "JavaScript",
-            "React.js",
-            "Node.js"
-        )
-    }
     var newSkill by remember { mutableStateOf("") }
 
     Box(
@@ -73,9 +63,7 @@ fun EditProfileScreen(
                         tint = Color.White,
                         modifier = Modifier
                             .size(28.dp)
-                            .clickable {
-                                navController.popBackStack()
-                            }
+                            .clickable { navController.popBackStack() }
                     )
 
                     Spacer(Modifier.width(12.dp))
@@ -89,9 +77,9 @@ fun EditProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(Modifier.height(20.dp))
 
-            /* ---------------- PROFILE PHOTO (UNCHANGED) ---------------- */
+            /* ---------------- PROFILE PHOTO ---------------- */
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -122,69 +110,60 @@ fun EditProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(Modifier.height(30.dp))
 
             /* ---------------- FORM SECTION ---------------- */
             Column(modifier = Modifier.padding(horizontal = 20.dp)) {
 
-                /* ---------- NAME ---------- */
                 Text("Full Name", fontWeight = FontWeight.SemiBold, color = PrimaryBlue)
                 OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
+                    value = viewModel.name.value,
+                    onValueChange = { viewModel.name.value = it },
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp)
                 )
 
-                /* ---------- ROLE ---------- */
+                Spacer(Modifier.height(16.dp))
+
                 Text("Role / Position", fontWeight = FontWeight.SemiBold, color = PrimaryBlue)
                 OutlinedTextField(
-                    value = role,
-                    onValueChange = { role = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
+                    value = viewModel.role.value,
+                    onValueChange = { viewModel.role.value = it },
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp)
                 )
 
-                /* ---------- BIO ---------- */
+                Spacer(Modifier.height(16.dp))
+
                 Text("Bio / About", fontWeight = FontWeight.SemiBold, color = PrimaryBlue)
                 OutlinedTextField(
-                    value = bio,
-                    onValueChange = { bio = it },
+                    value = viewModel.bio.value,
+                    onValueChange = { viewModel.bio.value = it },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(110.dp)
-                        .padding(bottom = 20.dp),
+                        .height(110.dp),
                     shape = RoundedCornerShape(14.dp)
                 )
 
-                /* ---------------- SKILLS SECTION (NEW) ---------------- */
-                Text(
-                    text = "Skills",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                    color = PrimaryBlue
-                )
+                Spacer(Modifier.height(20.dp))
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Text("Skills", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = PrimaryBlue)
+
+                Spacer(Modifier.height(8.dp))
 
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    skills.forEach { skill ->
+                    viewModel.skills.forEach { skill ->
                         SkillChip(
                             skill = skill,
-                            onRemove = { skills.remove(skill) }
+                            onRemove = { viewModel.skills.remove(skill) }
                         )
                     }
                 }
 
-
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(Modifier.height(12.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
 
@@ -192,16 +171,15 @@ fun EditProfileScreen(
                         value = newSkill,
                         onValueChange = { newSkill = it },
                         modifier = Modifier.weight(1f),
-                        placeholder = { Text("Add skill") },
-                        shape = RoundedCornerShape(14.dp)
+                        placeholder = { Text("Add skill") }
                     )
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(Modifier.width(8.dp))
 
                     Button(
                         onClick = {
                             if (newSkill.isNotBlank()) {
-                                skills.add(newSkill.trim())
+                                viewModel.skills.add(newSkill.trim())
                                 newSkill = ""
                             }
                         },
@@ -212,16 +190,11 @@ fun EditProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(Modifier.height(30.dp))
 
             /* ---------------- SAVE BUTTON ---------------- */
             Button(
-                onClick = {
-                    // 🔜 Backend API integration here
-                    navController.navigate(Screen.Profile.route) {
-                        popUpTo(Screen.Profile.route) { inclusive = true }
-                    }
-                },
+                onClick = { navController.popBackStack() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
