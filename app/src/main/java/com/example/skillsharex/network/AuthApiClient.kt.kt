@@ -8,7 +8,7 @@ import com.example.skillsharex.network.AuthApiClient
 object AuthApiClient {
 
     private const val BASE_URL =
-        "http://10.88.233.111/skillsharex_backend/api/"
+        "http://192.168.43.111/skillsharex_backend/api/"
 
     val api: AuthApi by lazy {
         Retrofit.Builder()

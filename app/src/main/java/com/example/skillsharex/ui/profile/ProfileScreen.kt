@@ -96,6 +96,9 @@ fun ProfileScreen(navController: NavController) {
         when (selectedTab) {
             0 -> ProfileTabContent(
                 courses = myCourses,
+                onEditProfile = {
+                    navController.navigate(Screen.EditProfile.route)   // 🔥 THIS IS THE KEY
+                },
                 onOpenSettings = {
                     navController.navigate(Screen.Settings.route)
                 },
@@ -228,19 +231,21 @@ fun ProfileHeader() {
         Text(userName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         Text("Mentor • SkillShareX", fontSize = 14.sp, color = Color.DarkGray)
     }
+
 }
 
 /* ---------------- PROFILE TAB ---------------- */
 
 @Composable
 fun ProfileTabContent(
+    onEditProfile: () -> Unit,
     onOpenSettings: () -> Unit,
     onLogout: () -> Unit,
     courses: List<Course>
 ) {
     Column(Modifier.padding(16.dp)) {
 
-        ProfileOption("Edit Profile")
+        ProfileOption("Edit Profile",onEditProfile )
         ProfileOption("Help & Support")
         ProfileOption("Settings", onOpenSettings)
 

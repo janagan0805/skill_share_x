@@ -126,7 +126,6 @@ fun AppNavHost() {
         composable("community") { CommunityScreen(navController) }
         composable("createPost") { CreatePostScreen(navController) }
         composable("profile") { ProfileScreen(navController) }
-        composable("editProfile") { EditProfileScreen(navController) }
         composable("settings") { SettingsScreen(navController) }
         composable("notifications") { NotificationsScreen(navController) }
 
@@ -216,6 +215,10 @@ fun AppNavHost() {
                 sessionId = sessionId ?: ""
             )
         }
+        composable(Screen.EditProfile.route) {
+            EditProfileScreen(navController = navController)
+        }
+
         composable(
             route = "live_session/{sessionId}",
             arguments = listOf(navArgument("sessionId") {
