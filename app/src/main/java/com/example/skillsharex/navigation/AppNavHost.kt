@@ -10,6 +10,7 @@ import com.example.skillsharex.ui.*
 import com.example.skillsharex.ui.call.CallScreen
 import com.example.skillsharex.ui.chat.ChatScreen
 import com.example.skillsharex.ui.community.*
+import com.example.skillsharex.ui.course.CourseDetailScreen
 import com.example.skillsharex.ui.forgot.ForgotPasswordScreen
 import com.example.skillsharex.ui.home.HomeDashboardScreen
 import com.example.skillsharex.ui.login.LoginScreen
@@ -146,6 +147,16 @@ fun AppNavHost() {
             arguments = listOf(navArgument("mentorId") { type = NavType.StringType })
         ) {
             MentorDetailScreen(navController)
+        }
+
+        composable(
+            "courseDetail/{courseId}",
+            arguments = listOf(navArgument("courseId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val courseId = backStackEntry.arguments?.getInt("courseId")
+            if (courseId != null) {
+                CourseDetailScreen(navController = navController, courseId = courseId)
+            }
         }
 
         composable(Screen.Requests.route) {

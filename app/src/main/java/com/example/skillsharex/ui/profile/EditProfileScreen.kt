@@ -24,12 +24,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.skillsharex.R
 import com.example.skillsharex.navigation.Screen
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 
 /* ---------------- THEME COLORS ---------------- */
 private val LavenderBg = Color(0xFFE8E6FF)
 private val HeaderPurple = Color(0xFF544DCA)
 private val PrimaryBlue = Color(0xFF1022FF)
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun EditProfileScreen(
     navController: NavController,

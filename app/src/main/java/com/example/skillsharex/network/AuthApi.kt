@@ -1,7 +1,7 @@
 package com.example.skillsharex.network
 
 import com.example.skillsharex.data.models.UploadImageResponse
-import com.example.skillsharex.model.BasicResponse
+import com.example.skillsharex.model.*
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
@@ -10,12 +10,8 @@ import retrofit2.Response
 import retrofit2.http.Multipart
 import retrofit2.http.Part
 import retrofit2.http.Query
-
-import com.example.skillsharex.model.LoginResponse
-import com.example.skillsharex.model.OnlineMentorsResponse
-import com.example.skillsharex.model.SignUpResponse
-import com.example.skillsharex.model.UserCoursesResponse
 import retrofit2.http.GET
+import retrofit2.http.Path
 
 interface AuthApi {
 
@@ -42,6 +38,15 @@ interface AuthApi {
 
     @GET("dashboard/online_mentors.php")
     suspend fun getOnlineMentors(): Response<OnlineMentorsResponse>
+
+    @GET("dashboard/available_courses.php")
+    suspend fun getAvailableCourses(): Response<AvailableCoursesResponse>
+
+    @GET("dashboard/top_mentors.php")
+    suspend fun getTopMentors(): Response<TopMentorsResponse>
+
+    @GET("course/get_course_detail.php")
+    suspend fun getCourseDetail(@Query("course_id") courseId: Int): Response<CourseDetailResponse>
 
     @FormUrlEncoded
     @POST("auth/logout.php")

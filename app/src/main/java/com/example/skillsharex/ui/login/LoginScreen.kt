@@ -128,7 +128,7 @@ fun LoginScreen(
                             }
 
                         } catch (e: Exception) {
-                            errorMsg = e.localizedMessage ?: "Server error"
+                            errorMsg = e.localizedMessage ?: ("Server error" + e.message.toString())
                         } finally {
                             loading = false
                         }

@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -30,35 +31,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.skillsharex.R
+import com.example.skillsharex.model.CourseData
+import com.example.skillsharex.model.MentorData
 import com.example.skillsharex.navigation.safeNavigate
 import com.example.skillsharex.network.AuthApiClient
 import com.example.skillsharex.utils.SessionManager
-
-
-
-/* ---------------- MENTOR MODEL ---------------- */
-
-data class Mentor(
-    val id: String,
-    val name: String,
-    val skill: String,
-    val image: Int,
-    val isOnline: Boolean,
-    val rating: Double
-)
-
-/* ---------------- SAMPLE DATA ---------------- */
-
-//private val mentors = listOf(
-//    Mentor("1", "Saranraj", "UI/UX Design", R.drawable.ic_ui_ux_design, true, 4.8),
-//    Mentor("2", "Karthick", "Android Development", R.drawable.android, true, 4.6),
-//    Mentor("3", "Pranav", "Java Programming", R.drawable.ic_java, false, 4.5),
-//    Mentor("4", "Gowtham", "Graphic Design", R.drawable.ic_graphics, true, 4.7),
-//    Mentor("5", "Dhanush", "Photoshop", R.drawable.ic_photoshop, false, 4.4)
-//)
-//
-//private val onlineMentors = mentors.filter { it.isOnline }
 
 /* ---------------- HOME DASHBOARD ---------------- */
 
@@ -68,9 +47,8 @@ fun HomeDashboardScreen(
     navController: NavController
 ) {
 
-    // 🔹 STEP 5 STATE: Online mentors from backend
-    var onlineMentors by remember { mutableStateOf<List<Mentor>>(emptyList()) }
-    var topMentors by remember { mutableStateOf<List<Mentor>>(emptyList()) }
+    var availableCourses by remember { mutableStateOf<List<CourseData>>(emptyList()) }
+    var topMentors by remember { mutableStateOf<List<MentorData>>(emptyList()) }
 
     val context = LocalContext.current
     val session = SessionManager(context)
@@ -79,42 +57,29 @@ fun HomeDashboardScreen(
     val categories = listOf("UI/UX", "Android", "Java", "Photoshop", "Design", "Career")
     val scrollState = rememberScrollState()
 
-    // 🔹 STEP 5 API CALL: Fetch online mentors
+    // Fetch data from the APIs
     LaunchedEffect(Unit) {
+        // Fetch available courses
         try {
-            val response = AuthApiClient.api.getOnlineMentors()
-
-            Log.d("ONLINE_MENTORS", "HTTP CODE = ${response.code()}")
-            Log.d("ONLINE_MENTORS", "RAW BODY = ${response.body()}")
-
-            if (response.isSuccessful) {
-                val list = response.body()?.data ?: emptyList()
-                Log.d("ONLINE_MENTORS", "COUNT = ${list.size}")
-
-                onlineMentors = list.map { mentor ->
-                    Mentor(
-                        id = mentor.id.toString(),
-                        name = mentor.full_name,
-                        skill = "Mentor",
-                        image = R.drawable.android,
-                        isOnline = true,
-                        rating = 4.5
-                    )
-                }
-
-                topMentors = list.map { mentor ->
-                    Mentor(
-                        id = mentor.id.toString(),
-                        name = mentor.full_name,
-                        skill = "Mentor",
-                        image = R.drawable.android,
-                        isOnline = true,
-                        rating = 4.6
-                    )
+            val courseResponse = AuthApiClient.api.getAvailableCourses()
+            if (courseResponse.isSuccessful) {
+                val allCourses = courseResponse.body()?.data ?: emptyList()
+                availableCourses = allCourses.filter {
+                    it.mentor_online_status.equals("online", ignoreCase = true)
                 }
             }
         } catch (e: Exception) {
-            Log.e("ONLINE_MENTORS", "ERROR", e)
+            Log.e("AVAILABLE_COURSES", "Error fetching courses", e)
+        }
+
+        // Fetch top mentors
+        try {
+            val mentorResponse = AuthApiClient.api.getTopMentors()
+            if (mentorResponse.isSuccessful) {
+                topMentors = mentorResponse.body()?.data ?: emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e("TOP_MENTORS", "Error fetching mentors", e)
         }
     }
 
@@ -200,23 +165,25 @@ fun HomeDashboardScreen(
 
             ActiveSessionCard(navController)
 
-            /* -------- MENTOR SECTIONS -------- */
+            /* -------- SECTIONS -------- */
 
-            MentorSection(
-                title = "Mentors Available Now",
-                mentors = onlineMentors,
-                onMentorClick = { sessionId ->
-                    navController.navigate("sessionDetail/$sessionId")
+            DashboardSection(
+                title = "Courses Available Now",
+                items = availableCourses,
+                itemContent = { course ->
+                    CourseCard(course = course, onClick = {
+                        navController.navigate("courseDetail/${course.id}")
+                    })
                 }
             )
 
-
-
-            MentorSection(
+            DashboardSection(
                 title = "Top Mentors For You",
-                mentors = topMentors,
-                onMentorClick = { mentorId ->
-                    navController.navigate("mentorDetail/$mentorId")
+                items = topMentors,
+                itemContent = { mentor ->
+                    MentorCard(mentor = mentor, onClick = {
+                        navController.navigate("mentorDetail/${mentor.id}")
+                    })
                 }
             )
 
@@ -258,15 +225,15 @@ fun ActiveSessionCard(
     }
 
 
-/* ---------------- MENTOR SECTION ---------------- */
+/* ---------------- DASHBOARD SECTION ---------------- */
 
 @Composable
-fun MentorSection(
+fun <T> DashboardSection(
     title: String,
-    mentors: List<Mentor>,
-    onMentorClick: (String) -> Unit
+    items: List<T>,
+    itemContent: @Composable (T) -> Unit
 ) {
-    Column {
+    Column(modifier = Modifier.padding(bottom = 16.dp)) {
         Text(
             text = title,
             fontSize = 20.sp,
@@ -274,12 +241,27 @@ fun MentorSection(
             modifier = Modifier.padding(start = 18.dp, bottom = 10.dp)
         )
 
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(mentors) { mentor ->
-                MentorCard(mentor, onMentorClick)
+        if (items.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "Nothing to show at the moment.",
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+            }
+        } else {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(items) { item ->
+                    itemContent(item)
+                }
             }
         }
     }
@@ -289,7 +271,7 @@ fun MentorSection(
 
 @Composable
 fun MentorCard(
-    mentor: Mentor,
+    mentor: MentorData,
     onClick: (String) -> Unit
 ) {
     Card(
@@ -302,8 +284,13 @@ fun MentorCard(
         Column {
 
             Image(
-                painter = painterResource(mentor.image),
+                painter = rememberAsyncImagePainter(
+                    model = mentor.imageUrl?.let { AuthApiClient.IMAGE_BASE_URL + it },
+                    error = painterResource(id = R.drawable.dilip),
+                    placeholder = painterResource(id = R.drawable.dilip)
+                ),
                 contentDescription = mentor.name,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(110.dp)
@@ -332,17 +319,84 @@ fun MentorCard(
                         modifier = Modifier
                             .size(8.dp)
                             .background(
-                                if (mentor.isOnline) Color.Green else Color.Gray,
+                                if (mentor.status.equals("online", ignoreCase = true)) Color.Green else Color.Gray,
                                 shape = RoundedCornerShape(50)
                             )
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        if (mentor.isOnline) "Online" else "Offline",
+                        if (mentor.status.equals("online", ignoreCase = true)) "Online" else "Offline",
                         fontSize = 12.sp
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text("⭐ ${mentor.rating}", fontSize = 12.sp)
+                }
+            }
+        }
+    }
+}
+
+/* ---------------- COURSE CARD ---------------- */
+
+@Composable
+fun CourseCard(
+    course: CourseData,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(180.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column {
+
+            Image(
+                painter = rememberAsyncImagePainter(
+                    model = course.cover_image?.let { AuthApiClient.IMAGE_BASE_URL + it },
+                    error = painterResource(id = R.drawable.android),
+                    placeholder = painterResource(id = R.drawable.android)
+                ),
+                contentDescription = course.course_name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(110.dp)
+            )
+
+            Column(modifier = Modifier.padding(10.dp)) {
+
+                Text(
+                    course.course_name,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    "Mentor: ${course.mentor_name}",
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(
+                                if (course.mentor_online_status.equals("online", ignoreCase = true)) Color.Green else Color.Gray,
+                                shape = RoundedCornerShape(50)
+                            )
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        if (course.mentor_online_status.equals("online", ignoreCase = true)) "Online" else "Offline",
+                        fontSize = 12.sp
+                    )
                 }
             }
         }
@@ -388,11 +442,5 @@ fun BottomBar(
             label = { Text("Mentors") }
         )
 
-        NavigationBarItem(
-            selected = false,
-            onClick = onProfileClick,
-            icon = { Icon(Icons.Default.Person, null) },
-            label = { Text("Profile") }
-        )
     }
 }
