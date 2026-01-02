@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object AuthApiClient {
 
     // This should be the IP address of your computer running XAMPP
-    private const val SERVER_IP = "10.127.184.111"
+    private const val SERVER_IP = "192.168.43.111"
     private const val BASE_URL = "http://$SERVER_IP:8080/skillsharex_backend/api/"
 
     // Publicly accessible URL for constructing image paths
