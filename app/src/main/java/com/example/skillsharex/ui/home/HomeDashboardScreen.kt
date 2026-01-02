@@ -14,12 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.skillsharex.R
@@ -38,17 +34,16 @@ import com.example.skillsharex.model.MentorData
 import com.example.skillsharex.navigation.safeNavigate
 import com.example.skillsharex.network.AuthApiClient
 import com.example.skillsharex.utils.SessionManager
+import com.example.skillsharex.viewmodel.DashboardViewModel
 
 /* ---------------- HOME DASHBOARD ---------------- */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeDashboardScreen(
-    navController: NavController
+    navController: NavController,
+    viewModel: DashboardViewModel = viewModel()
 ) {
-
-    var availableCourses by remember { mutableStateOf<List<CourseData>>(emptyList()) }
-    var topMentors by remember { mutableStateOf<List<MentorData>>(emptyList()) }
 
     val context = LocalContext.current
     val session = SessionManager(context)
@@ -57,33 +52,13 @@ fun HomeDashboardScreen(
     val categories = listOf("UI/UX", "Android", "Java", "Photoshop", "Design", "Career")
     val scrollState = rememberScrollState()
 
-    // Fetch data from the APIs
+    // 🔥 THIS IS THE ONLY LOGIC YOU ASKED TO ADD
     LaunchedEffect(Unit) {
-        // Fetch available courses
-        try {
-            val courseResponse = AuthApiClient.api.getAvailableCourses()
-            if (courseResponse.isSuccessful) {
-                val allCourses = courseResponse.body()?.data ?: emptyList()
-                availableCourses = allCourses.filter {
-                    it.mentor_online_status.equals("online", ignoreCase = true)
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("AVAILABLE_COURSES", "Error fetching courses", e)
-        }
-
-        // Fetch top mentors
-        try {
-            val mentorResponse = AuthApiClient.api.getTopMentors()
-            if (mentorResponse.isSuccessful) {
-                topMentors = mentorResponse.body()?.data ?: emptyList()
-            }
-        } catch (e: Exception) {
-            Log.e("TOP_MENTORS", "Error fetching mentors", e)
-        }
+        viewModel.loadDashboardData()
     }
 
-
+    val availableCourses = viewModel.courses
+    val topMentors = viewModel.mentors
 
     Scaffold(
         containerColor = Color(0xFFE8E6FF),
@@ -92,8 +67,7 @@ fun HomeDashboardScreen(
                 onProfileClick = { navController.navigate("profile") },
                 onOpenCourses = { navController.navigate("session_list") },
                 onOpenMentors = { navController.navigate("mentors") },
-                onOpenCommunity = { navController.safeNavigate("community")
-                }
+                onOpenCommunity = { navController.safeNavigate("community") }
             )
         }
     ) { innerPadding ->
@@ -171,9 +145,9 @@ fun HomeDashboardScreen(
                 title = "Courses Available Now",
                 items = availableCourses,
                 itemContent = { course ->
-                    CourseCard(course = course, onClick = {
+                    CourseCard(course = course) {
                         navController.navigate("courseDetail/${course.id}")
-                    })
+                    }
                 }
             )
 
@@ -181,9 +155,9 @@ fun HomeDashboardScreen(
                 title = "Top Mentors For You",
                 items = topMentors,
                 itemContent = { mentor ->
-                    MentorCard(mentor = mentor, onClick = {
-                        navController.navigate("mentorDetail/${mentor.id}")
-                    })
+                    MentorCard(mentor = mentor) {
+                        navController.navigate("mentorDetail/$it")
+                    }
                 }
             )
 
@@ -440,6 +414,12 @@ fun BottomBar(
             onClick = onOpenMentors,
             icon = { Icon(Icons.Default.Person, null) },
             label = { Text("Mentors") }
+        )
+        NavigationBarItem(
+            selected = false,
+            onClick = onProfileClick,
+            icon = { Icon(Icons.Default.Person, null) },
+            label = { Text("Profile") }
         )
 
     }
