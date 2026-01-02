@@ -1,100 +1,71 @@
 package com.example.skillsharex.data
 
-import com.example.skillsharex.R
-import com.example.skillsharex.model.CourseBrief
 import com.example.skillsharex.model.MentorDetail
-import com.example.skillsharex.model.Review
 
 val sampleMentorDetails = listOf(
 
     MentorDetail(
-        mentorId = "1",
+        id = 1,
         name = "Karthik",
-        skill = "Android Developer",
+        skill = "Android Development",
         rating = 4.9,
-        bio = "Android developer with 6+ years building production apps using Kotlin and Jetpack Compose.",
+        ratingCount = 120,
+        bio = "Android developer with 6+ years of experience building scalable apps using Kotlin and Jetpack Compose.",
         experienceYears = 6,
         expertiseList = listOf("Kotlin", "Jetpack Compose", "MVVM", "Coroutines"),
-        profileImageRes = R.drawable.karthick,
-        courses = listOf(
-            CourseBrief("c1", "Android Development Basics", 4.8, R.drawable.android),
-            CourseBrief("c2", "Advanced Compose UI", 4.7, R.drawable.ic_ui_ux_design)
-        ),
-        reviews = listOf(
-            Review("Anita", 5.0, "Explains concepts clearly."),
-            Review("Vikram", 4.8, "Great hands-on practice.")
-        )
+        image = "uploads/mentors/karthik.png",
+        status = "online"
     ),
 
     MentorDetail(
-        mentorId = "2",
+        id = 2,
         name = "Dilip",
-        skill = "UI/UX Designer",
+        skill = "UI/UX Design",
         rating = 4.8,
-        bio = "Designer focused on mobile UI and usability with 5+ years experience.",
+        ratingCount = 95,
+        bio = "UI/UX designer specializing in mobile-first experiences with strong usability principles.",
         experienceYears = 5,
-        expertiseList = listOf("Figma", "Prototyping", "Visual Design"),
-        profileImageRes = R.drawable.dilip,
-        courses = listOf(
-            CourseBrief("c3", "Creative UI/UX Design", 4.7, R.drawable.ic_ui_ux_design)
-        ),
-        reviews = listOf(
-            Review("Saran", 4.9, "Highly practical sessions."),
-            Review("Meena", 4.6, "Very helpful.")
-        )
+        expertiseList = listOf("Figma", "Prototyping", "Design Systems"),
+        image = "uploads/mentors/dilip.png",
+        status = "offline"
     ),
 
     MentorDetail(
-        mentorId = "3",
+        id = 3,
         name = "Pranav",
-        skill = "Java Expert",
-        rating = 4.8,
-        bio = "Java backend expert with strong real-world teaching approach.",
-        experienceYears = 3,
-        expertiseList = listOf("Java", "Backend", "Docker", "Gradle"),
-        profileImageRes = R.drawable.pranav,
-        courses = listOf(
-            CourseBrief("c4", "Java Masterclass", 4.7, R.drawable.ic_java)
-        ),
-        reviews = listOf(
-            Review("Vijay", 4.9, "Amazing learning experience."),
-            Review("Ashwin", 4.6, "Clear explanations.")
-        )
-    ),
-
-    MentorDetail(
-        mentorId = "4",
-        name = "Gowtham",
-        skill = "Graphic Designer",
-        rating = 4.8,
-        bio = "Graphic designer with 2.5+ years experience crafting brand visuals.",
-        experienceYears = 2,
-        expertiseList = listOf("VFX", "Animation", "Visual Design", "Gaming"),
-        profileImageRes = R.drawable.gowtham,
-        courses = listOf(
-            CourseBrief("c5", "Graphics Design", 4.7, R.drawable.ic_graphics)
-        ),
-        reviews = listOf(
-            Review("Sandhiya", 4.9, "Great for logo making."),
-            Review("Dhanacheziyan", 4.8, "Helps develop gaming graphics.")
-        )
-    ),
-
-    MentorDetail(
-        mentorId = "5",
-        name = "Dhanush",
-        skill = "Photoshop Artist",
+        skill = "Java Backend",
         rating = 4.7,
-        bio = "Photoshop expert with 2+ years designing banners, posters, and social media creatives.",
+        ratingCount = 80,
+        bio = "Backend engineer with deep expertise in Java, APIs, and system design.",
+        experienceYears = 3,
+        expertiseList = listOf("Java", "Spring Boot", "Docker", "Gradle"),
+        image = "uploads/mentors/pranav.png",
+        status = "online"
+    ),
+
+    MentorDetail(
+        id = 4,
+        name = "Gowtham",
+        skill = "Graphic Design",
+        rating = 4.6,
+        ratingCount = 70,
+        bio = "Graphic designer focused on branding, visual storytelling, and digital creatives.",
         experienceYears = 2,
-        expertiseList = listOf("Retouching", "Manipulation", "Product Editing"),
-        profileImageRes = R.drawable.dhanush,
-        courses = listOf(
-            CourseBrief("c6", "Photoshop Essentials", 4.7, R.drawable.ic_photoshop)
-        ),
-        reviews = listOf(
-            Review("Lakshmi", 4.9, "Very creative lessons."),
-            Review("Rithika", 4.8, "Helpful for editing.")
-        )
+        expertiseList = listOf("Photoshop", "Illustrator", "Brand Design"),
+        image = "uploads/mentors/gowtham.png",
+        status = "offline"
+    ),
+
+    MentorDetail(
+        id = 5,
+        name = "Dhanush",
+        skill = "Photoshop",
+        rating = 4.7,
+        ratingCount = 60,
+        bio = "Photoshop artist with hands-on experience in photo manipulation and social media creatives.",
+        experienceYears = 2,
+        expertiseList = listOf("Retouching", "Photo Manipulation", "Banner Design"),
+        image = "uploads/mentors/dhanush.png",
+        status = "online"
     )
 )

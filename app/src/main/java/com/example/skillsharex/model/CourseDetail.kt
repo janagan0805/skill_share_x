@@ -4,9 +4,22 @@ import com.google.gson.annotations.SerializedName
 
 // Response wrapper for the course detail API call
 data class CourseDetailResponse(
-    @SerializedName("status") val status: Boolean,
-    @SerializedName("data") val data: CourseDetail?
+    val success: Boolean,
+    val message: String,
+    val data: CourseDetailData
 )
+
+data class CourseDetailData(
+    val id: Int,
+    val course_name: String,
+    val description: String,
+    val cover_image: String?,
+    val rating: Double,
+    val rating_count: Int,
+    val mentor: MentorDetail
+)
+
+
 
 // Represents the detailed information for a single course
 data class CourseDetail(

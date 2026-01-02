@@ -16,48 +16,55 @@ import retrofit2.http.Path
 interface AuthApi {
 
     @FormUrlEncoded
-    @POST("auth/login.php")
+    @POST("api/auth/login.php")
     suspend fun login(
         @Field("email") email: String,
         @Field("password") password: String
     ): LoginResponse
 
     @FormUrlEncoded
-    @POST("auth/register.php")
+    @POST("api/auth/register.php")
     suspend fun register(
         @Field("full_name") name: String,
         @Field("email") email: String,
         @Field("password") password: String
     ): Response<SignUpResponse>
     @Multipart
-    @POST("auth/upload_profile_image.php")
+    @POST("api/auth/upload_profile_image.php")
     suspend fun uploadProfileImage(
         @Part image: MultipartBody.Part,
         @Query("user_id") userId: String
     ): Response<UploadImageResponse>
 
-    @GET("dashboard/online_mentors.php")
+    @GET("api/dashboard/online_mentors.php")
     suspend fun getOnlineMentors(): Response<OnlineMentorsResponse>
 
-    @GET("dashboard/available_courses.php")
-    suspend fun getAvailableCourses(): Response<AvailableCoursesResponse>
-
-    @GET("dashboard/top_mentors.php")
-    suspend fun getTopMentors(): Response<TopMentorsResponse>
-
-    @GET("course/get_course_detail.php")
-    suspend fun getCourseDetail(@Query("course_id") courseId: Int): Response<CourseDetailResponse>
-
     @FormUrlEncoded
-    @POST("auth/logout.php")
+    @POST("api/auth/logout.php")
     suspend fun logout(
         @Field("user_id") userId: Int
     ): Response<BasicResponse>
 
-    @GET("profile/get_user_courses.php")
+    @GET("api/profile/get_user_courses.php")
     suspend fun getUserCourses(
         @Query("user_id") userId: Int
     ): Response<UserCoursesResponse>
 
+    @GET("api/mentors/top_mentors.php")
+    suspend fun getTopMentors(): ApiResponse<List<MentorData>>
+
+    @GET("api/mentors/get_mentor_detail.php")
+    suspend fun getMentorDetail(
+        @Query("mentor_id") mentorId: Int
+    ): ApiResponse<MentorDetail>
+
+
+    @GET("api/dashboard/available_courses.php")
+    suspend fun getAvailableCourses(): ApiResponse<List<CourseData>>
+
+    @GET("api/course/get_course_detail.php")
+    suspend fun getCourseDetail(
+        @Query("course_id") courseId: String
+    ): CourseDetailResponse
 
 }

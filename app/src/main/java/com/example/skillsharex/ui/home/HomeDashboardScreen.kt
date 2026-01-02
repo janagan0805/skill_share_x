@@ -14,7 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.example.skillsharex.R
 import com.example.skillsharex.model.CourseData
 import com.example.skillsharex.model.MentorData
@@ -52,22 +54,20 @@ fun HomeDashboardScreen(
     val categories = listOf("UI/UX", "Android", "Java", "Photoshop", "Design", "Career")
     val scrollState = rememberScrollState()
 
-    // 🔥 THIS IS THE ONLY LOGIC YOU ASKED TO ADD
     LaunchedEffect(Unit) {
         viewModel.loadDashboardData()
     }
-
-    val availableCourses = viewModel.courses
-    val topMentors = viewModel.mentors
 
     Scaffold(
         containerColor = Color(0xFFE8E6FF),
         bottomBar = {
             BottomBar(
+                navController = navController,
                 onProfileClick = { navController.navigate("profile") },
                 onOpenCourses = { navController.navigate("session_list") },
                 onOpenMentors = { navController.navigate("mentors") },
-                onOpenCommunity = { navController.safeNavigate("community") }
+                onOpenCommunity = { navController.safeNavigate("community")
+                }
             )
         }
     ) { innerPadding ->
@@ -89,7 +89,7 @@ fun HomeDashboardScreen(
                 Column(modifier = Modifier.padding(20.dp)) {
 
                     Text(
-                        text = "Welcome $userName 👋",
+                        text = "Welcome ${userName ?: "User"} 👋",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -143,7 +143,7 @@ fun HomeDashboardScreen(
 
             DashboardSection(
                 title = "Courses Available Now",
-                items = availableCourses,
+                items = viewModel.courses,
                 itemContent = { course ->
                     CourseCard(course = course) {
                         navController.navigate("courseDetail/${course.id}")
@@ -153,10 +153,10 @@ fun HomeDashboardScreen(
 
             DashboardSection(
                 title = "Top Mentors For You",
-                items = topMentors,
+                items = viewModel.mentors,
                 itemContent = { mentor ->
                     MentorCard(mentor = mentor) {
-                        navController.navigate("mentorDetail/$it")
+                        navController.navigate("mentorDetail/${mentor.id}")
                     }
                 }
             )
@@ -195,8 +195,8 @@ fun ActiveSessionCard(
             }
 
         }
-        }
     }
+}
 
 
 /* ---------------- DASHBOARD SECTION ---------------- */
@@ -259,9 +259,12 @@ fun MentorCard(
 
             Image(
                 painter = rememberAsyncImagePainter(
-                    model = mentor.imageUrl?.let { AuthApiClient.IMAGE_BASE_URL + it },
-                    error = painterResource(id = R.drawable.dilip),
-                    placeholder = painterResource(id = R.drawable.dilip)
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(mentor.imageUrl?.let { AuthApiClient.IMAGE_BASE_URL + it })
+                        .crossfade(true)
+                        .build(),
+                    error = painterResource(id = R.drawable.profile),
+                    placeholder = painterResource(id = R.drawable.profile)
                 ),
                 contentDescription = mentor.name,
                 contentScale = ContentScale.Crop,
@@ -273,14 +276,14 @@ fun MentorCard(
             Column(modifier = Modifier.padding(10.dp)) {
 
                 Text(
-                    mentor.skill,
+                    text = mentor.skill ?: "No Skill",
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
                 Text(
-                    "Mentor: ${mentor.name}",
+                    text = "Mentor: ${mentor.name ?: "Unknown"}",
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
@@ -299,7 +302,7 @@ fun MentorCard(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        if (mentor.status.equals("online", ignoreCase = true)) "Online" else "Offline",
+                        text = if (mentor.status.equals("online", ignoreCase = true)) "Online" else "Offline",
                         fontSize = 12.sp
                     )
                     Spacer(modifier = Modifier.weight(1f))
@@ -328,7 +331,10 @@ fun CourseCard(
 
             Image(
                 painter = rememberAsyncImagePainter(
-                    model = course.cover_image?.let { AuthApiClient.IMAGE_BASE_URL + it },
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(course.cover_image?.let { AuthApiClient.IMAGE_BASE_URL + it })
+                        .crossfade(true)
+                        .build(),
                     error = painterResource(id = R.drawable.android),
                     placeholder = painterResource(id = R.drawable.android)
                 ),
@@ -342,14 +348,14 @@ fun CourseCard(
             Column(modifier = Modifier.padding(10.dp)) {
 
                 Text(
-                    course.course_name,
+                    text = course.course_name ?: "Untitled Course",
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
                 Text(
-                    "Mentor: ${course.mentor_name}",
+                    text = "Mentor: ${course.mentor_name ?: "Unknown"}",
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
@@ -368,7 +374,7 @@ fun CourseCard(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        if (course.mentor_online_status.equals("online", ignoreCase = true)) "Online" else "Offline",
+                        text = if (course.mentor_online_status.equals("online", ignoreCase = true)) "Online" else "Offline",
                         fontSize = 12.sp
                     )
                 }
@@ -381,6 +387,7 @@ fun CourseCard(
 
 @Composable
 fun BottomBar(
+    navController: NavController,
     onProfileClick: () -> Unit,
     onOpenCourses: () -> Unit,
     onOpenMentors: () -> Unit,
@@ -389,38 +396,38 @@ fun BottomBar(
     NavigationBar(containerColor = Color.White) {
 
         NavigationBarItem(
-            selected = true,
-            onClick = {},
+            selected = navController.currentDestination?.route == "home",
+            onClick = { navController.navigate("home") },
             icon = { Icon(Icons.Default.Home, null, tint = Color(0xFF425CFF)) },
             label = { Text("Home") }
         )
 
         NavigationBarItem(
-            selected = false,
+            selected = navController.currentDestination?.route == "community",
             onClick = onOpenCommunity,
             icon = { Icon(Icons.Default.People, null) },
             label = { Text("Community") }
         )
 
         NavigationBarItem(
-            selected = false,
+            selected = navController.currentDestination?.route == "session_list",
             onClick = onOpenCourses,
             icon = { Icon(Icons.Outlined.Book, null) },
             label = { Text("Sessions") }
         )
 
         NavigationBarItem(
-            selected = false,
+            selected = navController.currentDestination?.route == "mentors",
             onClick = onOpenMentors,
             icon = { Icon(Icons.Default.Person, null) },
             label = { Text("Mentors") }
         )
+
         NavigationBarItem(
-            selected = false,
+            selected = navController.currentDestination?.route == "profile",
             onClick = onProfileClick,
-            icon = { Icon(Icons.Default.Person, null) },
+            icon = { Icon(Icons.Default.AccountCircle, null) },
             label = { Text("Profile") }
         )
-
     }
 }

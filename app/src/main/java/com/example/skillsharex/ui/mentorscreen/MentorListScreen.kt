@@ -14,15 +14,17 @@ import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.skillsharex.data.sampleMentorDetails
-import com.example.skillsharex.model.MentorDetail
+import coil.compose.rememberAsyncImagePainter
+import com.example.skillsharex.model.MentorData
+import com.example.skillsharex.network.AuthApiClient
+import com.example.skillsharex.viewmodel.MentorListViewModel
 
-// ---------- THEME ----------
+/* ---------- THEME ---------- */
 private val Lavender = Color(0xFFE8E6FF)
 private val HeaderPurple = Color(0xFF544DCA)
 private val CardBg = Color.White
@@ -32,10 +34,18 @@ private val GradientBtn = Brush.horizontalGradient(
     listOf(Color(0xFF6C47FF), Color(0xFF4BC9FF))
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MentorListScreen(navController: NavController) {
+fun MentorListScreen(
+    navController: NavController,
+    viewModel: MentorListViewModel = viewModel()
+) {
 
     var searchText by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadMentors()
+    }
 
     Box(
         modifier = Modifier
@@ -78,7 +88,7 @@ fun MentorListScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            /* ---------- SEARCH BAR (FIXED) ---------- */
+            /* ---------- SEARCH BAR ---------- */
             TextField(
                 value = searchText,
                 onValueChange = { searchText = it },
@@ -96,16 +106,15 @@ fun MentorListScreen(navController: NavController) {
                 )
             )
 
-
             Spacer(modifier = Modifier.height(20.dp))
 
-            /* ---------- FILTER DATA (WORKING) ---------- */
-            val filteredList = sampleMentorDetails.filter {
+            /* ---------- FILTERED LIST ---------- */
+            val filteredList = viewModel.mentors.filter {
                 it.name.contains(searchText, ignoreCase = true) ||
                         it.skill.contains(searchText, ignoreCase = true)
             }
 
-            /* ---------- MENTOR LIST (FIXED NAVIGATION) ---------- */
+            /* ---------- MENTOR LIST ---------- */
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -115,8 +124,7 @@ fun MentorListScreen(navController: NavController) {
                     MentorCard(
                         mentor = mentor,
                         onClick = {
-                            // ✅ FINAL & CORRECT NAVIGATION
-                            navController.navigate("mentorDetail/${mentor.mentorId}")
+                            navController.navigate("mentorDetail/${mentor.id}")
                         }
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -132,7 +140,7 @@ fun MentorListScreen(navController: NavController) {
 
 @Composable
 fun MentorCard(
-    mentor: MentorDetail,
+    mentor: MentorData,
     onClick: () -> Unit
 ) {
 
@@ -151,7 +159,11 @@ fun MentorCard(
         ) {
 
             Image(
-                painter = painterResource(id = mentor.profileImageRes),
+                painter = rememberAsyncImagePainter(
+                    model = mentor.imageUrl?.let {
+                        AuthApiClient.IMAGE_BASE_URL + it
+                    }
+                ),
                 contentDescription = null,
                 modifier = Modifier
                     .size(65.dp)

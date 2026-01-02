@@ -165,9 +165,25 @@ fun AppNavHost() {
         }
 
         /* -------- DETAIL SCREENS -------- */
-        composable("mentorDetail/{mentorId}") { MentorDetailScreen(navController) }
+        composable(
+            route = "mentorDetail/{mentorId}",
+            arguments = listOf(
+                navArgument("mentorId") { type = NavType.IntType }
+            )
+        ) { backStackEntry ->
+
+            val mentorId = backStackEntry.arguments?.getInt("mentorId")
+
+            if (mentorId != null) {
+                MentorDetailScreen(
+                    navController = navController,
+                    mentorId = mentorId
+                )
+            }
+        }
+
         composable("courseDetail/{courseId}") { backStackEntry ->
-            val courseId = backStackEntry.arguments?.getInt("courseId")
+            val courseId = backStackEntry.arguments?.getString("courseId")
             if (courseId != null) {
                 CourseDetailScreen(navController = navController, courseId = courseId)
             }

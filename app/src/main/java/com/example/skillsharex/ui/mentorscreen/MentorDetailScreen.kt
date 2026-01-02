@@ -1,7 +1,7 @@
 package com.example.skillsharex.ui.mentor
 
-import android.widget.Toast
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -12,18 +12,20 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.skillsharex.data.sampleMentorDetails
+import coil.compose.rememberAsyncImagePainter
+import com.example.skillsharex.network.AuthApiClient
+import com.example.skillsharex.viewmodel.MentorDetailViewModel
 
 /* ---------------- THEME ---------------- */
 
@@ -35,183 +37,127 @@ private val Gradient = Brush.horizontalGradient(
 
 /* ---------------- MENTOR DETAIL SCREEN ---------------- */
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MentorDetailScreen(
-    navController: NavController
+    navController: NavController,
+    mentorId: Int,
+    viewModel: MentorDetailViewModel = viewModel()
 ) {
 
-    val mentorId = navController
-        .currentBackStackEntry
-        ?.arguments
-        ?.getString("mentorId")
-
-    val mentor = sampleMentorDetails.firstOrNull { it.mentorId == mentorId }
-    val context = LocalContext.current
-
-    if (mentor == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Mentor Not Found", color = Color.Red)
-        }
-        return
+    LaunchedEffect(mentorId) {
+        viewModel.loadMentorDetail(mentorId)
     }
 
     Scaffold(
         containerColor = Lavender,
         topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(HeaderPurple)
-                    .padding(top = 46.dp, bottom = 20.dp, start = 16.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-
+            TopAppBar(
+                title = { Text("Mentor Profile") },
+                navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-
-                    Spacer(Modifier.width(10.dp))
-
-                    Text(
-                        mentor.name,
-                        color = Color.White,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = HeaderPurple,
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
+                )
+            )
         }
     ) { innerPadding ->
 
-        LazyColumn(
-            modifier = Modifier
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp)
-        ) {
-
-            /* -------- PROFILE -------- */
-            item {
-                Spacer(Modifier.height(22.dp))
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Image(
-                        painter = painterResource(mentor.profileImageRes),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape)
-                    )
-
-                    Spacer(Modifier.height(10.dp))
-
-                    Text(mentor.name, fontWeight = FontWeight.Bold, fontSize = 22.sp)
-                    Text(mentor.skill, color = Color.Gray)
-                    Text("⭐ ${mentor.rating}", color = Color(0xFFFFC107))
-
-                    Spacer(Modifier.height(16.dp))
-                }
-            }
-
-            /* -------- ABOUT -------- */
-            item {
-                SectionTitle("About Mentor")
-                Text(mentor.bio, color = Color.DarkGray)
-                Spacer(Modifier.height(14.dp))
-            }
-
-            /* -------- SKILLS -------- */
-            item {
-                SectionTitle("Skills & Expertise")
-
-                LazyRow {
-                    items(mentor.expertiseList) { skill ->
-                        Box(
-                            modifier = Modifier
-                                .padding(end = 10.dp)
-                                .background(Gradient, RoundedCornerShape(20.dp))
-                                .padding(horizontal = 14.dp, vertical = 8.dp)
-                        ) {
-                            Text(skill, color = Color.White)
-                        }
-                    }
-                }
-
-                Spacer(Modifier.height(20.dp))
-            }
-
-            /* -------- REVIEWS -------- */
-            item { SectionTitle("Learner Reviews") }
-
-            items(mentor.reviews) { review ->
-                ReviewCard(
-                    review.reviewerName,
-                    review.rating,
-                    review.comment
-                )
-                Spacer(Modifier.height(10.dp))
-            }
-
-            /* -------- ACTION BUTTONS -------- */
-            item {
-
-                Spacer(Modifier.height(20.dp))
-
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-
-                    SolidButton(
-                        text = "Request Mentorship",
-                        modifier = Modifier.fillMaxWidth(0.9f)
-                    ) {
-                        Toast.makeText(context, "Request Sent!", Toast.LENGTH_SHORT).show()
-                    }
-
-                    Spacer(Modifier.height(20.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-
-                        SolidButton("Chat", Modifier.weight(1f)) {
-                            navController.navigate("chat/$mentorId")
-                        }
-
-                        Spacer(Modifier.width(12.dp))
-
-                        OutlineButton("Book Call", Modifier.weight(1f)) {
-                            // Future call screen
-                        }
-                    }
-
-                    Spacer(Modifier.height(26.dp))
-                }
-                Spacer(Modifier.height(12.dp))
-
-                Button(
-                    onClick = {
-                        navController.navigate("requests")
-                    },
+        when {
+            viewModel.isLoading -> {
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.9f),
-                    shape = RoundedCornerShape(14.dp)
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "View Mentorship Requests",
-                        fontWeight = FontWeight.Bold
-                    )
+                    CircularProgressIndicator()
                 }
+            }
 
+            viewModel.errorMessage != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(viewModel.errorMessage ?: "Error", color = Color.Red)
+                }
+            }
+
+            viewModel.mentor != null -> {
+                val mentor = viewModel.mentor!!
+
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .padding(horizontal = 16.dp)
+                ) {
+
+                    /* -------- PROFILE -------- */
+                    item {
+                        Spacer(Modifier.height(20.dp))
+
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+
+                            Image(
+                                painter = rememberAsyncImagePainter(
+                                    model = mentor.image?.let {
+                                        AuthApiClient.IMAGE_BASE_URL + it
+                                    }
+                                ),
+                                contentDescription = null,
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .clip(CircleShape)
+                            )
+
+                            Spacer(Modifier.height(10.dp))
+
+                            Text(mentor.name, fontWeight = FontWeight.Bold, fontSize = 22.sp)
+                            Text(mentor.skill, color = Color.Gray)
+                            Text("⭐ ${mentor.rating} (${mentor.ratingCount})", color = Color(0xFFFFC107))
+
+                            Spacer(Modifier.height(16.dp))
+                        }
+                    }
+
+                    /* -------- ABOUT -------- */
+                    item {
+                        SectionTitle("About Mentor")
+                        Text(mentor.bio, color = Color.DarkGray)
+                        Spacer(Modifier.height(14.dp))
+                    }
+
+                    /* -------- SKILLS -------- */
+                    item {
+                        SectionTitle("Skills & Expertise")
+
+                        LazyRow {
+                            items(mentor.expertiseList) { skill ->
+                                Box(
+                                    modifier = Modifier
+                                        .padding(end = 10.dp)
+                                        .background(Gradient, RoundedCornerShape(20.dp))
+                                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                                ) {
+                                    Text(skill, color = Color.White)
+                                }
+                            }
+                        }
+
+                        Spacer(Modifier.height(20.dp))
+                    }
+                }
             }
         }
     }
@@ -227,43 +173,4 @@ fun SectionTitle(title: String) {
         fontSize = 18.sp,
         modifier = Modifier.padding(vertical = 6.dp)
     )
-}
-
-@Composable
-fun ReviewCard(name: String, rating: Double, comment: String) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.White, RoundedCornerShape(14.dp))
-            .padding(12.dp)
-    ) {
-        Text("$name • ⭐ $rating", fontWeight = FontWeight.Bold)
-        Text(comment, color = Color.DarkGray)
-    }
-}
-
-@Composable
-fun SolidButton(text: String, modifier: Modifier, onClick: () -> Unit) {
-    Box(
-        modifier = modifier
-            .background(Gradient, RoundedCornerShape(14.dp))
-            .clickable { onClick() }
-            .padding(vertical = 14.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text, color = Color.White, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
-fun OutlineButton(text: String, modifier: Modifier, onClick: () -> Unit) {
-    Box(
-        modifier = modifier
-            .border(1.dp, Gradient, RoundedCornerShape(14.dp))
-            .clickable { onClick() }
-            .padding(vertical = 14.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(text, fontWeight = FontWeight.Bold)
-    }
 }

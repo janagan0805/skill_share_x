@@ -13,16 +13,32 @@ data class CourseBrief(
     val thumbnailRes: Int
 )
 
+//data class MentorDetail(
+//    val id: Int,
+//    val status: String,
+//    val image: String?,
+//    val mentorId: String,
+//    val name: String,
+//    val skill: String,
+//    val rating: Double,
+//    val bio: String,
+//    val experienceYears: Int,
+//    val expertiseList: List<String>,
+//    val profileImageRes: Int,
+//    val courses: List<CourseBrief>,
+//    val reviews: List<Review>
+//)
+
 data class MentorDetail(
-    val mentorId: String,
+    val id: Int,
     val name: String,
     val skill: String,
     val rating: Double,
+    val ratingCount: Int,
     val bio: String,
     val experienceYears: Int,
     val expertiseList: List<String>,
-    val profileImageRes: Int,
-    val courses: List<CourseBrief>,
-    val reviews: List<Review>
+    val image: String?,
+    val status: String
 )
 

@@ -1,38 +1,55 @@
 package com.example.skillsharex.viewmodel
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skillsharex.model.CourseData
 import com.example.skillsharex.model.MentorData
 import com.example.skillsharex.network.AuthApiClient
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 class DashboardViewModel : ViewModel() {
 
-    var courses: List<CourseData> = emptyList()
+    var mentors by mutableStateOf<List<MentorData>>(emptyList())
         private set
 
-    var mentors: List<MentorData> = emptyList()
+    var courses by mutableStateOf<List<CourseData>>(emptyList())
+        private set
+
+    var isLoading by mutableStateOf(false)
         private set
 
     fun loadDashboardData() {
         viewModelScope.launch {
+            isLoading = true
             try {
-                // ✅ Courses
-                val courseResponse = AuthApiClient.api.getAvailableCourses()
-                if (courseResponse.isSuccessful) {
-                    courses = courseResponse.body()?.data ?: emptyList()
+                val mentorsResponse = AuthApiClient.api.getTopMentors()
+                val coursesResponse = AuthApiClient.api.getAvailableCourses()
+
+                if (mentorsResponse.success) {
+                    mentors = mentorsResponse.data
                 }
 
-                // ✅ Mentors
-                val mentorResponse = AuthApiClient.api.getTopMentors()
-                if (mentorResponse.isSuccessful) {
-                    mentors = mentorResponse.body()?.data ?: emptyList()
+                if (coursesResponse.success) {
+                    courses = coursesResponse.data
                 }
 
-            } catch (e: Exception) {
-                Log.e("DASHBOARD_VM", "Error loading dashboard", e)
+            } catch (e: HttpException) {
+                Log.e("DashboardVM", "HTTP ${e.code()} ${e.message()}")
+                courses = emptyList()
+                mentors = emptyList()
+            }
+            catch (e: Exception) {
+                Log.e("DashboardVM", "Unexpected error", e)
+                courses = emptyList()
+                mentors = emptyList()
+            }
+            finally {
+                isLoading = false
             }
         }
     }
