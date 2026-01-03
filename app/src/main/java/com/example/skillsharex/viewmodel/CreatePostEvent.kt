@@ -1,9 +1,10 @@
 package com.example.skillsharex.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.skillsharex.network.CommunityService
+import com.example.skillsharex.model.community.CreatePostRequest
 import kotlinx.coroutines.launch
 
 /* ---------------- EVENTS ---------------- */
@@ -36,73 +37,55 @@ class CreatePostEventViewModel : ViewModel() {
     var state by mutableStateOf(CreatePostState())
         private set
 
+    private val api = CommunityService.api
+
     fun onEvent(event: CreatePostEvent) {
         when (event) {
 
-            is CreatePostEvent.PostTypeChanged -> {
+            is CreatePostEvent.PostTypeChanged ->
                 state = state.copy(postType = event.type)
-            }
 
-            is CreatePostEvent.TitleChanged -> {
+            is CreatePostEvent.TitleChanged ->
                 state = state.copy(title = event.title)
-            }
 
-            is CreatePostEvent.DescriptionChanged -> {
+            is CreatePostEvent.DescriptionChanged ->
                 state = state.copy(description = event.description)
-            }
 
-            CreatePostEvent.SubmitPost -> {
+            CreatePostEvent.SubmitPost ->
                 submitPost()
-            }
 
-            CreatePostEvent.ResetState -> {
+            CreatePostEvent.ResetState ->
                 state = CreatePostState()
-            }
         }
     }
 
-    /* ---------------- SUBMIT LOGIC ---------------- */
-
     private fun submitPost() {
-        if (state.title.isBlank() || state.description.isBlank()) {
-            state = state.copy(errorMessage = "Title and description cannot be empty")
-            return
-        }
-
         viewModelScope.launch {
-            state = state.copy(
-                isSubmitting = true,
-                errorMessage = null,
-                isSuccess = false
-            )
+            state = state.copy(isSubmitting = true, errorMessage = null)
 
             try {
-                // 🔹 Phase-2: backend not wired yet
-                // TODO (Phase-3):
-                // CommunityService.api.createPost(
-                //   userId = ...
-                //   postType = state.postType,
-                //   title = state.title,
-                //   description = state.description
-                // )
-
-                Log.d(
-                    "CreatePostEventVM",
-                    "Submitting post → type=${state.postType}, title=${state.title}"
+                val response = api.createPost(
+                    CreatePostRequest(
+                        user_id = 1, // TODO replace with SessionManager
+                        post_type = state.postType,
+                        skill_id = null,
+                        title = state.title,
+                        description = state.description
+                    )
                 )
 
-                // Demo success
-                state = state.copy(
-                    isSubmitting = false,
-                    isSuccess = true
-                )
+                if (response.status == "success") {
+                    state = state.copy(isSuccess = true)
+                } else {
+                    state = state.copy(errorMessage = response.message)
+                }
 
             } catch (e: Exception) {
-                Log.e("CreatePostEventVM", "Create post failed", e)
                 state = state.copy(
-                    isSubmitting = false,
-                    errorMessage = "Failed to create post"
+                    errorMessage = e.localizedMessage ?: "Post failed"
                 )
+            } finally {
+                state = state.copy(isSubmitting = false)
             }
         }
     }

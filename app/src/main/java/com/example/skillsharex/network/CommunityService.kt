@@ -6,7 +6,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object CommunityService {
 
     private const val BASE_URL =
-        "http://192.168.31.11:8080/skillsharex_backend/api/"
+        "http://192.168.31.11:8080/skillsharex_backend/"
 
     val api: CommunityApi by lazy {
         Retrofit.Builder()

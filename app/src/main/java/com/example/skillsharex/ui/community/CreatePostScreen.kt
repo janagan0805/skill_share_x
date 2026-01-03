@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,7 +39,11 @@ fun CreatePostScreen(
     // Navigate back on success
     if (state.isSuccess) {
         navController.popBackStack()
-        viewModel.onEvent(CreatePostEvent.ResetState)
+        LaunchedEffect(state.isSuccess) {
+            if (state.isSuccess) {
+                navController.popBackStack()
+            }
+        }
     }
 
     Scaffold(

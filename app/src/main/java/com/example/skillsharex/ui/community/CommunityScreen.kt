@@ -41,6 +41,10 @@ fun CommunityScreen(
     LaunchedEffect(Unit) {
         viewModel.loadCommunityFeed()
     }
+    LaunchedEffect(navController.currentBackStackEntry) {
+        viewModel.loadCommunityFeed()
+    }
+
 
     Scaffold(
         topBar = {
