@@ -6,7 +6,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
-import com.example.skillsharex.ui.*
 import com.example.skillsharex.ui.call.CallScreen
 import com.example.skillsharex.ui.chat.ChatScreen
 import com.example.skillsharex.ui.community.*
@@ -27,6 +26,9 @@ import com.example.skillsharex.ui.signup.SignUpScreen
 import com.example.skillsharex.ui.splash.AppSplashScreen
 import com.example.skillsharex.ui.splash.OnboardingScreen
 import com.example.skillsharex.utils.SessionManager
+import com.example.skillsharex.viewmodel.CommunityViewModel
+import com.example.skillsharex.viewmodel.CreatePostViewModel
+
 
 @Composable
 fun AppNavHost() {
@@ -104,11 +106,10 @@ fun AppNavHost() {
 
         composable("create_post") {
             CreatePostScreen(
-                navController = navController,
-                communityViewModel = communityViewModel,
-                createPostViewModel = createPostViewModel
+                navController = navController
             )
         }
+
 
         composable(
             route = "post_detail/{postTitle}",

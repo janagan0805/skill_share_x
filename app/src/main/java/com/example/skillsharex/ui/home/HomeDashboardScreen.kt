@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.skillsharex.R
 import com.example.skillsharex.model.CourseData
@@ -257,15 +257,13 @@ fun MentorCard(
     ) {
         Column {
 
-            Image(
-                painter = rememberAsyncImagePainter(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(mentor.imageUrl?.let { AuthApiClient.IMAGE_BASE_URL + it })
-                        .crossfade(true)
-                        .build(),
-                    error = painterResource(id = R.drawable.profile),
-                    placeholder = painterResource(id = R.drawable.profile)
-                ),
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(mentor.imageUrl?.let { AuthApiClient.IMAGE_BASE_URL + it })
+                    .crossfade(true)
+                    .build(),
+                placeholder = painterResource(id = R.drawable.profile),
+                error = painterResource(id = R.drawable.profile),
                 contentDescription = mentor.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -329,15 +327,13 @@ fun CourseCard(
     ) {
         Column {
 
-            Image(
-                painter = rememberAsyncImagePainter(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(course.cover_image?.let { AuthApiClient.IMAGE_BASE_URL + it })
-                        .crossfade(true)
-                        .build(),
-                    error = painterResource(id = R.drawable.android),
-                    placeholder = painterResource(id = R.drawable.android)
-                ),
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(course.cover_image?.let { AuthApiClient.IMAGE_BASE_URL + it })
+                    .crossfade(true)
+                    .build(),
+                placeholder = painterResource(id = R.drawable.android),
+                error = painterResource(id = R.drawable.android),
                 contentDescription = course.course_name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier

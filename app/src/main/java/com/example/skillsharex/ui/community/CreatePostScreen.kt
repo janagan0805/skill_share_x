@@ -1,4 +1,3 @@
-
 package com.example.skillsharex.ui.community
 
 import androidx.compose.foundation.background
@@ -12,7 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,31 +23,22 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import kotlinx.coroutines.flow.collectLatest
+import com.example.skillsharex.viewmodel.CreatePostEvent
+import com.example.skillsharex.viewmodel.CreatePostEventViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreatePostScreen(
     navController: NavController,
-    communityViewModel: CommunityViewModel,
-    createPostViewModel: CreatePostViewModel = viewModel()
+    viewModel: CreatePostEventViewModel = viewModel()
 ) {
-    val uiState = createPostViewModel.uiState
-    val isPostEnabled = createPostViewModel.isPostButtonEnabled
 
-    // Listen for events from the ViewModel
-    LaunchedEffect(Unit) {
-        createPostViewModel.events.collectLatest { event ->
-            when (event) {
-                is CreatePostEvent.PostSuccess -> {
-                    // Navigate back to the community feed on success
-                    navController.popBackStack()
-                }
-                is CreatePostEvent.PostError -> {
-                    // TODO: Show a snackbar or toast with the error message
-                }
-            }
-        }
+    val state = viewModel.state
+
+    // Navigate back on success
+    if (state.isSuccess) {
+        navController.popBackStack()
+        viewModel.onEvent(CreatePostEvent.ResetState)
     }
 
     Scaffold(
@@ -57,17 +47,24 @@ fun CreatePostScreen(
                 title = { Text("Create Post") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
                     }
                 },
                 actions = {
                     TextButton(
-                        onClick = { createPostViewModel.submitPost(communityViewModel) },
-                        enabled = isPostEnabled && !uiState.isPosting
+                        onClick = {
+                            viewModel.onEvent(CreatePostEvent.SubmitPost)
+                        },
+                        enabled = !state.isSubmitting
+                                && state.title.isNotBlank()
+                                && state.description.isNotBlank()
                     ) {
-                        if (uiState.isPosting) {
+                        if (state.isSubmitting) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
+                                modifier = Modifier.size(20.dp),
                                 strokeWidth = 2.dp
                             )
                         } else {
@@ -78,42 +75,62 @@ fun CreatePostScreen(
             )
         }
     ) { padding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState()) // Make the screen scrollable
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // In a real app, user data would come from a user repository or session manager
+
+            /* ---------- USER HEADER (TEMP) ---------- */
             UserHeader(
-                userName = "John Appleseed", // Replace with actual user data
-                userRole = "Mentor",          // Replace with actual user data
-                avatarUrl = "https://i.pravatar.cc/150?u=a042581f4e29026704d" // Replace with actual user data
+                userName = "John Appleseed",
+                userRole = "Mentor",
+                avatarUrl = "https://i.pravatar.cc/150"
             )
 
+            /* ---------- POST TYPE ---------- */
             TopicSelector(
-                selectedTopic = uiState.selectedTopic,
-                onTopicSelected = createPostViewModel::onTopicSelect
+                selectedTopic = state.postType,
+                onTopicSelected = {
+                    viewModel.onEvent(CreatePostEvent.PostTypeChanged(it))
+                }
             )
 
+            /* ---------- INPUT FIELDS ---------- */
             PostInputFields(
-                title = uiState.title,
-                onTitleChange = createPostViewModel::onTitleChange,
-                description = uiState.description,
-                onDescriptionChange = createPostViewModel::onDescriptionChange
+                title = state.title,
+                onTitleChange = {
+                    viewModel.onEvent(CreatePostEvent.TitleChanged(it))
+                },
+                description = state.description,
+                onDescriptionChange = {
+                    viewModel.onEvent(CreatePostEvent.DescriptionChanged(it))
+                }
             )
 
+            /* ---------- ACTION BAR ---------- */
             PostActionBar()
 
+            /* ---------- ERROR ---------- */
+            state.errorMessage?.let {
+                Text(it, color = MaterialTheme.colorScheme.error)
+            }
         }
     }
 }
 
+/* ---------------- USER HEADER ---------------- */
 
 @Composable
-fun UserHeader(userName: String, userRole: String, avatarUrl: String) {
+fun UserHeader(
+    userName: String,
+    userRole: String,
+    avatarUrl: String
+) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         AsyncImage(
             model = avatarUrl,
@@ -141,17 +158,21 @@ fun UserHeader(userName: String, userRole: String, avatarUrl: String) {
     }
 }
 
+/* ---------------- TOPIC SELECTOR ---------------- */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopicSelector(selectedTopic: String, onTopicSelected: (String) -> Unit) {
-    val topics = listOf(
-        "Android Development", "Web Development", "UI/UX", "Career Guidance", "General Discussion"
-    )
-    var expanded by remember { mutableStateOf(false) }
+fun TopicSelector(
+    selectedTopic: String,
+    onTopicSelected: (String) -> Unit
+) {
+    val topics = listOf("discussion", "achievement", "poll")
+    var expanded = false
 
     Column {
-        Text("Select a Topic*", fontWeight = FontWeight.Medium, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Post Type*", fontWeight = FontWeight.Medium)
         Spacer(Modifier.height(8.dp))
+
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded }
@@ -160,20 +181,23 @@ fun TopicSelector(selectedTopic: String, onTopicSelected: (String) -> Unit) {
                 value = selectedTopic,
                 onValueChange = {},
                 readOnly = true,
-                label = { Text("Topic") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                label = { Text("Type") },
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(expanded)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .menuAnchor(),
                 shape = RoundedCornerShape(12.dp)
             )
+
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
                 topics.forEach { topic ->
                     DropdownMenuItem(
-                        text = { Text(topic) },
+                        text = { Text(topic.replaceFirstChar { it.uppercase() }) },
                         onClick = {
                             onTopicSelected(topic)
                             expanded = false
@@ -185,6 +209,8 @@ fun TopicSelector(selectedTopic: String, onTopicSelected: (String) -> Unit) {
     }
 }
 
+/* ---------------- INPUT FIELDS ---------------- */
+
 @Composable
 fun PostInputFields(
     title: String,
@@ -193,13 +219,12 @@ fun PostInputFields(
     onDescriptionChange: (String) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        // Post Title
+
         OutlinedTextField(
             value = title,
             onValueChange = onTitleChange,
             modifier = Modifier.fillMaxWidth(),
             label = { Text("Post Title*") },
-            placeholder = { Text("A clear, concise title for your post") },
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
             supportingText = {
@@ -211,7 +236,6 @@ fun PostInputFields(
             }
         )
 
-        // Post Description
         OutlinedTextField(
             value = description,
             onValueChange = onDescriptionChange,
@@ -219,7 +243,6 @@ fun PostInputFields(
                 .fillMaxWidth()
                 .height(200.dp),
             label = { Text("Description*") },
-            placeholder = { Text("Share your thoughts, questions, or tips...") },
             shape = RoundedCornerShape(12.dp),
             supportingText = {
                 Text(
@@ -232,23 +255,28 @@ fun PostInputFields(
     }
 }
 
+/* ---------------- ACTION BAR ---------------- */
+
 @Composable
 fun PostActionBar() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(12.dp)
+                1.dp,
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                RoundedCornerShape(12.dp)
             )
-            .padding(horizontal = 12.dp, vertical = 8.dp),
+            .padding(12.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = { /* TODO: Implement add image */ }) {
-            Icon(Icons.Default.AddAPhoto, contentDescription = "Add Image", tint = MaterialTheme.colorScheme.primary)
+        IconButton(onClick = { /* Phase-3 */ }) {
+            Icon(
+                Icons.Default.AddAPhoto,
+                contentDescription = "Add Image",
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
-        // Add more actions here if needed (e.g., add link, skill tags)
     }
 }
