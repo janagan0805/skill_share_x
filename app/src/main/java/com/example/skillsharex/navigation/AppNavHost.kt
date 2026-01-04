@@ -8,6 +8,7 @@ import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.example.skillsharex.ui.call.CallScreen
 import com.example.skillsharex.ui.chat.ChatScreen
+import com.example.skillsharex.ui.chatbot.ChatbotScreen
 import com.example.skillsharex.ui.community.*
 import com.example.skillsharex.ui.course.CourseDetailScreen
 import com.example.skillsharex.ui.forgot.ForgotPasswordScreen
@@ -112,6 +113,12 @@ fun AppNavHost() {
         composable("home") { HomeDashboardScreen(navController) }
         composable("mentors") { MentorListScreen(navController) }
         composable("notifications") { NotificationsScreen(navController) }
+
+        /*----------CHATBOT--------*/
+        composable("chatbot") {
+            ChatbotScreen(navController)
+        }
+
 
         /* -------- COMMUNITY -------- */
         composable("community") {
