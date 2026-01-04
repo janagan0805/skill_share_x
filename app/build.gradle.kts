@@ -68,6 +68,10 @@ dependencies {
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.compose.runtime)
+
+    // androidx.compose.material3:material3 for chatbot ui
+    implementation("androidx.compose.material3:material3")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
