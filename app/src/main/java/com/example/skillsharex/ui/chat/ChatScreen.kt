@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -21,14 +22,19 @@ import androidx.navigation.NavController
 // THEME
 private val LavenderBg = Color(0xFFE8E6FF)
 private val HeaderPurple = Color(0xFF544DCA)
-private val UserBubble = Color(0xFF425CFF)
+//private val UserBubble = Color(0xFF425CFF)
 private val MentorBubble = Color.White
+
+private val ChatBg = Color(0xFFEFEFEF)
+private val UserBubble = Color(0xFFDCF8C6)   // WhatsApp green
+private val OtherBubble = Color.White
+private val InputBg = Color.White
+
 
 data class ChatMessage(
     val text: String,
     val isUser: Boolean
 )
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
@@ -47,27 +53,27 @@ fun ChatScreen(
     }
 
     Scaffold(
-        containerColor = LavenderBg,
+        containerColor = ChatBg,
         topBar = {
             TopAppBar(
                 title = {
                     Text(
                         text = mentorName,
                         color = Color.White,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Medium
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = null,
                             tint = Color.White
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = HeaderPurple
+                    containerColor = Color(0xFF075E54) // WhatsApp header
                 )
             )
         }
@@ -79,38 +85,47 @@ fun ChatScreen(
                 .padding(padding)
         ) {
 
-            /* -------- MESSAGES -------- */
-
+            // MESSAGES
             LazyColumn(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 items(messages) { msg ->
-                    ChatBubble(msg)
+                    WhatsAppBubble(msg)
                 }
             }
 
-            /* -------- INPUT -------- */
-
+            // INPUT BAR
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color.White)
-                    .padding(8.dp),
+                    .background(ChatBg)
+                    .padding(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
-                OutlinedTextField(
-                    value = messageText,
-                    onValueChange = { messageText = it },
-                    placeholder = { Text("Type a message") },
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(30.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .background(InputBg, RoundedCornerShape(24.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    TextField(
+                        value = messageText,
+                        onValueChange = { messageText = it },
+                        placeholder = { Text("Type a message") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = TextFieldDefaults.textFieldColors(
+                            containerColor = Color.Transparent,
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent
+                        )
+                    )
+                }
 
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
 
                 IconButton(
                     onClick = {
@@ -118,12 +133,15 @@ fun ChatScreen(
                             messages.add(ChatMessage(messageText, true))
                             messageText = ""
                         }
-                    }
+                    },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(Color(0xFF25D366), CircleShape)
                 ) {
                     Icon(
                         Icons.Default.Send,
                         contentDescription = "Send",
-                        tint = HeaderPurple
+                        tint = Color.White
                     )
                 }
             }
@@ -132,22 +150,30 @@ fun ChatScreen(
 }
 
 @Composable
-fun ChatBubble(message: ChatMessage) {
+fun WhatsAppBubble(message: ChatMessage) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = if (message.isUser)
             Arrangement.End else Arrangement.Start
     ) {
-        Card(
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (message.isUser) UserBubble else MentorBubble
-            )
+        Box(
+            modifier = Modifier
+                .widthIn(max = 280.dp)
+                .background(
+                    color = if (message.isUser) UserBubble else OtherBubble,
+                    shape = RoundedCornerShape(
+                        topStart = 16.dp,
+                        topEnd = 16.dp,
+                        bottomEnd = if (message.isUser) 0.dp else 16.dp,
+                        bottomStart = if (message.isUser) 16.dp else 0.dp
+                    )
+                )
+                .padding(10.dp)
         ) {
             Text(
                 text = message.text,
-                modifier = Modifier.padding(12.dp),
-                color = if (message.isUser) Color.White else Color.Black
+                fontSize = 15.sp,
+                color = Color.Black
             )
         }
     }
