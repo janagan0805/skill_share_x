@@ -74,6 +74,12 @@ interface AuthApi {
         @Part image: MultipartBody.Part,
         @Part("user_id") userId: RequestBody
     ): Response<GenericResponse>
+    @GET("profile/get_profile.php")
+    suspend fun getProfile(
+        @Query("user_id") userId: Int
+    ): Response<GetProfileResponse>
+
+
 }
 
 

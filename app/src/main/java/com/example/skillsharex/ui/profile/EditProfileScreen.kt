@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.ui.layout.ContentScale
 import com.example.skillsharex.utils.FileUtils
 import com.example.skillsharex.viewmodel.ProfileViewModel
 
@@ -44,15 +45,19 @@ fun EditProfileScreen(
     val context = LocalContext.current
 
     var newSkill by remember { mutableStateOf("") }
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var uploading by remember { mutableStateOf(false) }
+
+    // ✅ FIX: declare selectedImageUri
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     /* ---------------- IMAGE PICKER ---------------- */
     val imagePicker =
         rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.GetContent()
+            ActivityResultContracts.GetContent()
         ) { uri ->
-            selectedImageUri = uri
+            if (uri != null) {
+                selectedImageUri = uri
+            }
         }
 
     Box(
@@ -110,7 +115,8 @@ fun EditProfileScreen(
                         modifier = Modifier
                             .size(120.dp)
                             .clip(CircleShape)
-                            .background(Color.White)
+                            .background(Color.White),
+                        contentScale = ContentScale.Crop
                     )
 
                     Icon(
@@ -131,6 +137,7 @@ fun EditProfileScreen(
 
                 Spacer(Modifier.height(8.dp))
 
+                // ✅ FIX: Upload button logic now valid
                 if (selectedImageUri != null) {
                     Button(
                         onClick = {
@@ -141,13 +148,10 @@ fun EditProfileScreen(
                                     context,
                                     selectedImageUri!!
                                 )
-                            val imagePath = file.absolutePath
 
-                            viewModel.uploadProfileImage(imagePath) { success, imageUrl ->
+                            viewModel.uploadProfileImage(file.absolutePath) { _, _ ->
                                 uploading = false
-                                if (success && imageUrl != null) {
-                                    // profileImageUrl already updated in ViewModel
-                                }
+                                selectedImageUri = null
                             }
                         },
                         colors = ButtonDefaults.buttonColors(PrimaryBlue)

@@ -13,7 +13,7 @@ import java.io.File
 
 class ProfileViewModel : ViewModel() {
 
-    val userId: Int = 1 // replace later with SessionManager
+    val userId: Int = 1 // TODO replace later with SessionManager
 
     val name = mutableStateOf("Jana")
     val role = mutableStateOf("Mentor • SkillShareX")
@@ -26,8 +26,41 @@ class ProfileViewModel : ViewModel() {
         "Photoshop"
     )
 
+    // ✅ SINGLE SOURCE OF TRUTH
     val profileImageUrl = mutableStateOf<String?>(null)
 
+    /* ----------------------------------------------------
+       FETCH PROFILE (FROM DATABASE → UI)
+       Call this after login or in ProfileScreen LaunchedEffect
+    ---------------------------------------------------- */
+    fun fetchProfile(userId: Int) {
+        viewModelScope.launch {
+            try {
+                val response = AuthApiClient.api.getProfile(userId)
+
+                if (response.isSuccessful && response.body()?.status == true) {
+                    val data = response.body()!!.data
+
+                    name.value = data.name
+                    role.value = data.role
+                    bio.value = data.bio
+
+                    profileImageUrl.value =
+                        "http://172.25.105.154/skillsharex_backend/${data.profile_image}"
+
+                    skills.clear()
+                    skills.addAll(data.skills)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /* ----------------------------------------------------
+       UPLOAD PROFILE IMAGE
+       Called from EditProfileScreen
+    ---------------------------------------------------- */
     fun uploadProfileImage(
         imagePath: String,
         onResult: (Boolean, String?) -> Unit
@@ -53,8 +86,11 @@ class ProfileViewModel : ViewModel() {
                     AuthApiClient.api.uploadProfileImage(imagePart, userIdBody)
 
                 if (response.isSuccessful && response.body()?.status == true) {
-                    profileImageUrl.value = response.body()?.image_url
-                    onResult(true, response.body()?.image_url)
+                    response.body()?.image_url?.let { url ->
+                        profileImageUrl.value =
+                            "http://172.25.105.154/skillsharex_backend/$url"
+                        onResult(true, url)
+                    }
                 } else {
                     onResult(false, response.body()?.message)
                 }

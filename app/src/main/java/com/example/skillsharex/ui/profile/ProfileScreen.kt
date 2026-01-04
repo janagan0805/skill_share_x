@@ -45,6 +45,10 @@ fun ProfileScreen(
     val context = LocalContext.current
     val session = SessionManager(context)
     val scope = rememberCoroutineScope()
+    LaunchedEffect(Unit) {
+        viewModel.fetchProfile(viewModel.userId)
+    }
+
 
     val tabs = listOf("Profile", "Sessions", "Reviews")
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -53,7 +57,6 @@ fun ProfileScreen(
 
     LaunchedEffect(Unit) {
         val userId = session.getUserId() ?: return@LaunchedEffect
-
         try {
             val response = AuthApiClient.api.getUserCourses(userId)
             if (response.isSuccessful && response.body()?.status == true) {
@@ -72,16 +75,14 @@ fun ProfileScreen(
 
         Spacer(Modifier.height(20.dp))
 
-        ProfileHeader()
+        ProfileHeader(viewModel)
+
         SkillSection()
         StatsRow()
 
         Spacer(Modifier.height(20.dp))
 
-        TabRow(
-            selectedTabIndex = selectedTab,
-            containerColor = Color.Transparent
-        ) {
+        TabRow(selectedTabIndex = selectedTab) {
             tabs.forEachIndexed { index, text ->
                 Tab(
                     selected = selectedTab == index,
@@ -134,7 +135,7 @@ fun ProfileScreen(
 /* ---------------- PROFILE HEADER ---------------- */
 
 @Composable
-fun ProfileHeader() {
+fun ProfileHeader(viewModel: ProfileViewModel) {
 
     val context = LocalContext.current
     val session = SessionManager(context)
@@ -142,6 +143,7 @@ fun ProfileHeader() {
 
     val userName = session.getUserName() ?: "User"
 
+    // ✅ FIX: SINGLE, VALID IMAGE STATE
     var profileImageUri by remember {
         mutableStateOf(
             session.getProfileImageUrl()?.let {
@@ -202,7 +204,7 @@ fun ProfileHeader() {
             } else {
                 Icon(
                     Icons.Default.Person,
-                    null,
+                    contentDescription = null,
                     modifier = Modifier
                         .size(100.dp)
                         .clip(CircleShape)
@@ -213,7 +215,7 @@ fun ProfileHeader() {
 
             Icon(
                 Icons.Default.Edit,
-                null,
+                contentDescription = null,
                 tint = Color.White,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -251,13 +253,7 @@ fun ProfileTabContent(
 
             Spacer(Modifier.height(16.dp))
 
-            Text(
-                "Courses I Teach",
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-
-            Spacer(Modifier.height(8.dp))
+            Text("Courses I Teach", fontWeight = FontWeight.Bold)
 
             LazyColumn {
                 items(courses) { course ->
@@ -287,13 +283,8 @@ fun CourseRow(course: Course) {
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(Modifier.padding(12.dp)) {
-            Text(text = course.title, fontWeight = FontWeight.Bold)
-            Text(
-                text = course.description,
-                fontSize = 12.sp,
-                color = Color.Gray,
-                maxLines = 2
-            )
+            Text(course.title, fontWeight = FontWeight.Bold)
+            Text(course.description, fontSize = 12.sp, color = Color.Gray)
         }
     }
 }
