@@ -16,6 +16,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        val openRouterKey =
+            project.findProperty("OPENROUTER_API_KEY") as String? ?: ""
+
+        buildConfigField(
+            "String",
+            "OPENROUTER_API_KEY",
+            "\"$openRouterKey\""
+        )
     }
 
     buildTypes {
@@ -36,6 +44,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.8"

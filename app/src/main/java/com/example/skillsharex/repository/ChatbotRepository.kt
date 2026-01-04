@@ -13,6 +13,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import com.example.skillsharex.BuildConfig
 
 class ChatbotRepository {
 
@@ -34,11 +35,13 @@ class ChatbotRepository {
 
     private val API_URL = "https://openrouter.ai/api/v1/chat/completions"
     private val MODEL = "nvidia/nemotron-3-nano-30b-a3b:free"
-    private val API_KEY = "sk-or-v1-dummyapi"
+    private val API_KEY = BuildConfig.OPENROUTER_API_KEY
 
     suspend fun sendMessageWithReasoning(userQuestion: String): String {
 
         val raw: String = client.post(API_URL) {
+            println("OPENROUTER KEY = ${BuildConfig.OPENROUTER_API_KEY}")
+
             contentType(ContentType.Application.Json)
             header("Authorization", "Bearer $API_KEY")
             header("HTTP-Referer", "https://skillsharex.app")
