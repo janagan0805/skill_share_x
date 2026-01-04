@@ -1,11 +1,13 @@
 package com.example.skillsharex.network
 
+import com.example.skillsharex.data.model.GenericResponse
 import com.example.skillsharex.data.models.UploadImageResponse
 import com.example.skillsharex.model.*
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.Response
 import retrofit2.http.Multipart
 import retrofit2.http.Part
@@ -66,5 +68,12 @@ interface AuthApi {
     suspend fun getCourseDetail(
         @Query("course_id") courseId: String
     ): CourseDetailResponse
-
+    @Multipart
+    @POST("auth/upload_profile_image.php")
+    suspend fun uploadProfileImage(
+        @Part image: MultipartBody.Part,
+        @Part("user_id") userId: RequestBody
+    ): Response<GenericResponse>
 }
+
+

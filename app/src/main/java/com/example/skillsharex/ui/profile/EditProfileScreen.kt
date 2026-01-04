@@ -1,6 +1,8 @@
 package com.example.skillsharex.ui.profile
 
-import androidx.compose.foundation.Image
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,14 +19,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.skillsharex.R
-import com.example.skillsharex.navigation.Screen
+import coil.compose.AsyncImage
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import com.example.skillsharex.utils.FileUtils
+import com.example.skillsharex.viewmodel.ProfileViewModel
 
 /* ---------------- THEME COLORS ---------------- */
 private val LavenderBg = Color(0xFFE8E6FF)
@@ -38,7 +41,19 @@ fun EditProfileScreen(
     viewModel: ProfileViewModel
 ) {
 
+    val context = LocalContext.current
+
     var newSkill by remember { mutableStateOf("") }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var uploading by remember { mutableStateOf(false) }
+
+    /* ---------------- IMAGE PICKER ---------------- */
+    val imagePicker =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent()
+        ) { uri ->
+            selectedImageUri = uri
+        }
 
     Box(
         modifier = Modifier
@@ -89,8 +104,8 @@ fun EditProfileScreen(
 
                 Box(modifier = Modifier.size(120.dp)) {
 
-                    Image(
-                        painter = painterResource(id = R.drawable.jana),
+                    AsyncImage(
+                        model = selectedImageUri ?: viewModel.profileImageUrl.value,
                         contentDescription = null,
                         modifier = Modifier
                             .size(120.dp)
@@ -108,7 +123,40 @@ fun EditProfileScreen(
                             .clip(CircleShape)
                             .background(PrimaryBlue)
                             .padding(6.dp)
+                            .clickable {
+                                imagePicker.launch("image/*")
+                            }
                     )
+                }
+
+                Spacer(Modifier.height(8.dp))
+
+                if (selectedImageUri != null) {
+                    Button(
+                        onClick = {
+                            uploading = true
+
+                            val file =
+                                FileUtils.getFileFromUri(
+                                    context,
+                                    selectedImageUri!!
+                                )
+                            val imagePath = file.absolutePath
+
+                            viewModel.uploadProfileImage(imagePath) { success, imageUrl ->
+                                uploading = false
+                                if (success && imageUrl != null) {
+                                    // profileImageUrl already updated in ViewModel
+                                }
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(PrimaryBlue)
+                    ) {
+                        Text(
+                            if (uploading) "Uploading..." else "Upload Photo",
+                            color = Color.White
+                        )
+                    }
                 }
             }
 
@@ -149,7 +197,12 @@ fun EditProfileScreen(
 
                 Spacer(Modifier.height(20.dp))
 
-                Text("Skills", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = PrimaryBlue)
+                Text(
+                    "Skills",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp,
+                    color = PrimaryBlue
+                )
 
                 Spacer(Modifier.height(8.dp))
 

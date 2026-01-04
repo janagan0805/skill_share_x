@@ -7,6 +7,15 @@ import androidx.lifecycle.viewModelScope
 import com.example.skillsharex.network.CommunityService
 import kotlinx.coroutines.launch
 
+data class CreatePostState(
+    val postType: String = "discussion",
+    val title: String = "",
+    val description: String = "",
+    val isSubmitting: Boolean = false,
+    val isSuccess: Boolean = false,
+    val errorMessage: String? = null
+)
+
 class CreatePostViewModel : ViewModel() {
 
     var isSubmitting by mutableStateOf(false)

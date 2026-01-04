@@ -30,12 +30,11 @@ import com.example.skillsharex.navigation.Screen
 import com.example.skillsharex.network.AuthApiClient
 import com.example.skillsharex.utils.FileUtils
 import com.example.skillsharex.utils.SessionManager
+import com.example.skillsharex.viewmodel.ProfileViewModel
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import com.example.skillsharex.ui.profile.ProfileViewModel
-
 
 @Composable
 fun ProfileScreen(
@@ -73,8 +72,8 @@ fun ProfileScreen(
 
         Spacer(Modifier.height(20.dp))
 
-        ProfileHeader(viewModel)
-        SkillSection(viewModel)
+        ProfileHeader()
+        SkillSection()
         StatsRow()
 
         Spacer(Modifier.height(20.dp))
@@ -102,7 +101,7 @@ fun ProfileScreen(
             0 -> ProfileTabContent(
                 courses = myCourses,
                 onEditProfile = {
-                    navController.navigate(Screen.EditProfile.route)   // 🔥 THIS IS THE KEY
+                    navController.navigate(Screen.EditProfile.route)
                 },
                 onOpenSettings = {
                     navController.navigate(Screen.Settings.route)
@@ -111,15 +110,12 @@ fun ProfileScreen(
                     scope.launch {
                         try {
                             val userId = session.getUserId()
-
                             if (userId != null) {
-                                // 🔥 STEP 6: Tell backend user is offline
                                 AuthApiClient.api.logout(userId)
                             }
                         } catch (e: Exception) {
                             e.printStackTrace()
                         } finally {
-                            // 🔹 Always clear session & navigate
                             session.logout()
                             navController.navigate("login") {
                                 popUpTo(0) { inclusive = true }
@@ -127,7 +123,6 @@ fun ProfileScreen(
                         }
                     }
                 }
-
             )
 
             1 -> SessionsTabContent()
@@ -139,7 +134,7 @@ fun ProfileScreen(
 /* ---------------- PROFILE HEADER ---------------- */
 
 @Composable
-fun ProfileHeader(viewModel: ProfileViewModel) {
+fun ProfileHeader() {
 
     val context = LocalContext.current
     val session = SessionManager(context)
@@ -177,7 +172,6 @@ fun ProfileHeader(viewModel: ProfileViewModel) {
                     image = part,
                     userId = userId
                 )
-
 
                 if (response.isSuccessful) {
                     response.body()?.data?.image_url?.let { url ->
@@ -236,7 +230,6 @@ fun ProfileHeader(viewModel: ProfileViewModel) {
         Text(userName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         Text("Mentor • SkillShareX", fontSize = 14.sp, color = Color.DarkGray)
     }
-
 }
 
 /* ---------------- PROFILE TAB ---------------- */
@@ -250,11 +243,10 @@ fun ProfileTabContent(
 ) {
     Column(Modifier.padding(16.dp)) {
 
-        ProfileOption("Edit Profile",onEditProfile )
+        ProfileOption("Edit Profile", onEditProfile)
         ProfileOption("Help & Support")
         ProfileOption("Settings", onOpenSettings)
 
-        /* 🔥 COURSES SECTION (THIS WAS MISSING) */
         if (courses.isNotEmpty()) {
 
             Spacer(Modifier.height(16.dp))
@@ -285,6 +277,7 @@ fun ProfileTabContent(
         }
     }
 }
+
 @Composable
 fun CourseRow(course: Course) {
     Card(
@@ -293,44 +286,22 @@ fun CourseRow(course: Course) {
             .padding(vertical = 6.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            AsyncImage(
-                model = "http://10.88.233.111/skillsharex_backend/${course.image_path}",
-                contentDescription = null,
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(RoundedCornerShape(10.dp)),
-                contentScale = ContentScale.Crop
+        Column(Modifier.padding(12.dp)) {
+            Text(text = course.title, fontWeight = FontWeight.Bold)
+            Text(
+                text = course.description,
+                fontSize = 12.sp,
+                color = Color.Gray,
+                maxLines = 2
             )
-
-            Spacer(Modifier.width(12.dp))
-
-            Column {
-                Text(
-                    text = course.title,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = course.description,
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                    maxLines = 2
-                )
-            }
         }
     }
 }
 
-
-
 /* ---------------- SKILLS ---------------- */
 
 @Composable
-fun SkillSection(viewModel: ProfileViewModel) {
+fun SkillSection() {
     val skills = listOf("UI/UX", "Java", "Figma", "Photoshop")
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
         skills.forEach {

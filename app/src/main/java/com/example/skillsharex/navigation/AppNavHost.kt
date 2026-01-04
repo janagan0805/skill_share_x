@@ -17,18 +17,16 @@ import com.example.skillsharex.ui.mentor.*
 import com.example.skillsharex.ui.notifications.NotificationsScreen
 import com.example.skillsharex.ui.profile.EditProfileScreen
 import com.example.skillsharex.ui.profile.ProfileScreen
-import com.example.skillsharex.ui.profile.ProfileViewModel
 import com.example.skillsharex.ui.requests.MentorshipRequestsScreen
 import com.example.skillsharex.ui.session.*
-import com.example.skillsharex.ui.sessions.*
+import com.example.skillsharex.ui.sessions.SessionDetailScreen
+import com.example.skillsharex.ui.sessions.SessionScreen
 import com.example.skillsharex.ui.settings.SettingsScreen
 import com.example.skillsharex.ui.signup.SignUpScreen
 import com.example.skillsharex.ui.splash.AppSplashScreen
 import com.example.skillsharex.ui.splash.OnboardingScreen
 import com.example.skillsharex.utils.SessionManager
-import com.example.skillsharex.viewmodel.CommunityViewModel
-import com.example.skillsharex.viewmodel.CreatePostViewModel
-
+import com.example.skillsharex.viewmodel.*
 
 @Composable
 fun AppNavHost() {
@@ -37,10 +35,10 @@ fun AppNavHost() {
     val context = LocalContext.current
     val session = SessionManager(context)
 
-    // SHARED VIEWMODELS
+    /* ---------- SINGLE SOURCE OF TRUTH (VIEWMODELS) ---------- */
     val profileViewModel: ProfileViewModel = viewModel()
     val communityViewModel: CommunityViewModel = viewModel()
-    val createPostViewModel: CreatePostViewModel = viewModel()
+    val createPostViewModel: CreatePostEventViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -51,9 +49,20 @@ fun AppNavHost() {
         composable("splash") {
             AppSplashScreen {
                 when {
-                    session.isFirstLaunch() -> navController.navigate("onboarding") { popUpTo("splash") { inclusive = true } }
-                    session.isLoggedIn() -> navController.navigate("home") { popUpTo("splash") { inclusive = true } }
-                    else -> navController.navigate("login") { popUpTo("splash") { inclusive = true } }
+                    session.isFirstLaunch() ->
+                        navController.navigate("onboarding") {
+                            popUpTo("splash") { inclusive = true }
+                        }
+
+                    session.isLoggedIn() ->
+                        navController.navigate("home") {
+                            popUpTo("splash") { inclusive = true }
+                        }
+
+                    else ->
+                        navController.navigate("login") {
+                            popUpTo("splash") { inclusive = true }
+                        }
                 }
             }
         }
@@ -62,18 +71,22 @@ fun AppNavHost() {
             OnboardingScreen(
                 onFinish = {
                     session.setFirstLaunchDone()
-                    navController.navigate("login") { popUpTo("onboarding") { inclusive = true } }
+                    navController.navigate("login") {
+                        popUpTo("onboarding") { inclusive = true }
+                    }
                 }
             )
         }
 
-        /* -------- AUTHENTICATION -------- */
+        /* -------- AUTH -------- */
         composable("login") {
             LoginScreen(
                 onLoginSuccess = { userName ->
                     session.saveUserName(userName)
                     session.setLoggedIn(true)
-                    navController.navigate("home") { popUpTo("login") { inclusive = true } }
+                    navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                    }
                 },
                 onSignUpClick = { navController.navigate("signup") },
                 onForgotPasswordClick = { navController.navigate("forgotPassword") }
@@ -82,7 +95,11 @@ fun AppNavHost() {
 
         composable("signup") {
             SignUpScreen(
-                onSignUpSuccess = { navController.navigate("login") { popUpTo("signup") { inclusive = true } } },
+                onSignUpSuccess = {
+                    navController.navigate("login") {
+                        popUpTo("signup") { inclusive = true }
+                    }
+                },
                 onBackToLogin = { navController.popBackStack() }
             )
         }
@@ -91,7 +108,7 @@ fun AppNavHost() {
             ForgotPasswordScreen(onBackToLogin = { navController.popBackStack() })
         }
 
-        /* -------- MAIN APP -------- */
+        /* -------- MAIN -------- */
         composable("home") { HomeDashboardScreen(navController) }
         composable("mentors") { MentorListScreen(navController) }
         composable("notifications") { NotificationsScreen(navController) }
@@ -106,10 +123,10 @@ fun AppNavHost() {
 
         composable("create_post") {
             CreatePostScreen(
-                navController = navController
+                navController = navController,
+                viewModel = createPostViewModel
             )
         }
-
 
         composable(
             route = "post_detail/{postTitle}",
@@ -121,74 +138,73 @@ fun AppNavHost() {
             )
         }
 
-        /* -------- PROFILE & SETTINGS -------- */
+        /* -------- PROFILE -------- */
         composable("profile") {
             ProfileScreen(
                 navController = navController,
                 viewModel = profileViewModel
             )
         }
+
         composable(Screen.EditProfile.route) {
             EditProfileScreen(
                 navController = navController,
                 viewModel = profileViewModel
             )
         }
+
         composable("settings") { SettingsScreen(navController) }
 
-        /* -------- SESSIONS & MENTORSHIP -------- */
+        /* -------- SESSIONS -------- */
         composable(Screen.Requests.route) {
             MentorshipRequestsScreen(navController)
         }
+
         composable(Screen.SessionList.route) {
             SessionListScreen(navController)
         }
+
         composable("sessions") {
             SessionScreen(navController)
         }
+
         composable("sessionDetail/{sessionId}") { backStackEntry ->
             SessionDetailScreen(
                 navController = navController,
                 sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             )
         }
-        composable(route = "session_overview/{sessionId}") { backStackEntry ->
+
+        composable("session_overview/{sessionId}") { backStackEntry ->
             SessionOverviewScreen(
                 navController = navController,
                 sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             )
         }
-        composable(route = "live_session/{sessionId}") { backStackEntry ->
+
+        composable("live_session/{sessionId}") { backStackEntry ->
             LiveSessionScreen(
                 navController = navController,
                 sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
             )
         }
 
-        /* -------- DETAIL SCREENS -------- */
+        /* -------- DETAILS -------- */
         composable(
-            route = "mentorDetail/{mentorId}",
-            arguments = listOf(
-                navArgument("mentorId") { type = NavType.IntType }
-            )
+            "mentorDetail/{mentorId}",
+            arguments = listOf(navArgument("mentorId") { type = NavType.IntType })
         ) { backStackEntry ->
-
-            val mentorId = backStackEntry.arguments?.getInt("mentorId")
-
-            if (mentorId != null) {
-                MentorDetailScreen(
-                    navController = navController,
-                    mentorId = mentorId
-                )
+            backStackEntry.arguments?.getInt("mentorId")?.let {
+                MentorDetailScreen(navController, it)
             }
         }
 
         composable("courseDetail/{courseId}") { backStackEntry ->
-            val courseId = backStackEntry.arguments?.getString("courseId")
-            if (courseId != null) {
-                CourseDetailScreen(navController = navController, courseId = courseId)
+            backStackEntry.arguments?.getString("courseId")?.let {
+                CourseDetailScreen(navController, it)
             }
         }
+
         composable("chat/{mentorId}") { ChatScreen(navController) }
         composable("call") { CallScreen(navController) }
         composable(Screen.SkillFilter.route) { SkillFilterScreen(navController) }

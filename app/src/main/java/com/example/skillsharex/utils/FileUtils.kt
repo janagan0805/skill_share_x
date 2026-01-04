@@ -8,12 +8,21 @@ import java.io.FileOutputStream
 object FileUtils {
 
     fun getFileFromUri(context: Context, uri: Uri): File {
-        val inputStream = context.contentResolver.openInputStream(uri)
-        val file = File(context.cacheDir, "profile_image.jpg")
+        val inputStream =
+            context.contentResolver.openInputStream(uri)
+                ?: throw IllegalArgumentException("Cannot open URI")
+
+        val file = File(
+            context.cacheDir,
+            "image_${System.currentTimeMillis()}.jpg"
+        )
+
         val outputStream = FileOutputStream(file)
-        inputStream?.copyTo(outputStream)
-        inputStream?.close()
+        inputStream.copyTo(outputStream)
+
+        inputStream.close()
         outputStream.close()
+
         return file
     }
 }
