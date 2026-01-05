@@ -1,56 +1,86 @@
 package com.example.skillsharex.viewmodel
 
+import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.skillsharex.network.AuthApiClient
+import com.example.skillsharex.utils.SessionManager
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.File
 
 class ProfileViewModel : ViewModel() {
 
-    val userId: Int = 1 // TODO replace later with SessionManager
+    /* ---------------- SESSION ---------------- */
 
-    val name = mutableStateOf("Jana")
-    val role = mutableStateOf("Mentor • SkillShareX")
-    val bio = mutableStateOf("Helping learners grow in Design & Tech 🚀")
+    private var sessionManager: SessionManager? = null
 
-    val skills = mutableStateListOf(
-        "UI/UX",
-        "Java",
-        "Figma",
-        "Photoshop"
-    )
+    fun initSession(context: Context) {
+        if (sessionManager == null) {
+            sessionManager = SessionManager(context)
+
+            // ✅ LOAD CACHED IMAGE IMMEDIATELY (IMPORTANT)
+            sessionManager?.getProfileImageUrl()?.let { path ->
+                profileImageUrl.value =
+                    AuthApiClient.IMAGE_BASE_URL + path
+            }
+        }
+    }
+
+    /* ---------------- PROFILE STATE ---------------- */
+
+    val name = mutableStateOf("")
+    val role = mutableStateOf("")
+    val bio = mutableStateOf("")
+
+    val skills = mutableStateListOf<String>()
 
     // ✅ SINGLE SOURCE OF TRUTH
     val profileImageUrl = mutableStateOf<String?>(null)
 
     /* ----------------------------------------------------
-       FETCH PROFILE (FROM DATABASE → UI)
-       Call this after login or in ProfileScreen LaunchedEffect
+       FETCH PROFILE (SERVER → VIEWMODEL → UI)
     ---------------------------------------------------- */
-    fun fetchProfile(userId: Int) {
+    fun fetchProfile() {
+        val userId = sessionManager?.getUserId() ?: return
+
         viewModelScope.launch {
             try {
                 val response = AuthApiClient.api.getProfile(userId)
 
-                if (response.isSuccessful && response.body()?.status == true) {
-                    val data = response.body()!!.data
+                if (!response.isSuccessful) return@launch
+                val body = response.body() ?: return@launch
+                if (!body.success) return@launch
 
-                    name.value = data.name
-                    role.value = data.role
-                    bio.value = data.bio
+                val data = body.data
 
-                    profileImageUrl.value =
-                        "http://172.25.105.154/skillsharex_backend/${data.profile_image}"
+                name.value = data.name
+                role.value = data.role
+                bio.value = data.bio
 
-                    skills.clear()
-                    skills.addAll(data.skills)
+                // ✅ USE SERVER IMAGE IF AVAILABLE
+                val imagePath =
+                    data.profile_image
+                        ?: sessionManager?.getProfileImageUrl()
+
+                profileImageUrl.value =
+                    imagePath?.let {
+                        AuthApiClient.IMAGE_BASE_URL + it
+                    }
+
+                // ✅ SAVE FOR NEXT APP OPEN
+                imagePath?.let {
+                    sessionManager?.saveProfileImageUrl(it)
                 }
+
+
+                skills.clear()
+                skills.addAll(data.skills)
+
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -59,44 +89,54 @@ class ProfileViewModel : ViewModel() {
 
     /* ----------------------------------------------------
        UPLOAD PROFILE IMAGE
-       Called from EditProfileScreen
     ---------------------------------------------------- */
     fun uploadProfileImage(
-        imagePath: String,
-        onResult: (Boolean, String?) -> Unit
+        context: Context,
+        imageUri: Uri
     ) {
+        val userId = sessionManager?.getUserId() ?: return
+
         viewModelScope.launch {
             try {
-                val file = File(imagePath)
+                val inputStream =
+                    context.contentResolver.openInputStream(imageUri) ?: return@launch
 
-                val requestFile =
-                    file.readBytes().toRequestBody("image/*".toMediaType())
+                val bytes = inputStream.readBytes()
+
+                val requestBody =
+                    bytes.toRequestBody("image/*".toMediaType())
 
                 val imagePart =
                     MultipartBody.Part.createFormData(
                         "image",
-                        file.name,
-                        requestFile
+                        "profile_$userId.jpg",
+                        requestBody
                     )
 
                 val userIdBody =
-                    userId.toString().toRequestBody("text/plain".toMediaType())
+                    userId.toString()
+                        .toRequestBody("text/plain".toMediaType())
 
                 val response =
-                    AuthApiClient.api.uploadProfileImage(imagePart, userIdBody)
+                    AuthApiClient.api.uploadProfileImage(
+                        image = imagePart,
+                        userId = userIdBody
+                    )
 
-                if (response.isSuccessful && response.body()?.status == true) {
-                    response.body()?.image_url?.let { url ->
-                        profileImageUrl.value =
-                            "http://172.25.105.154/skillsharex_backend/$url"
-                        onResult(true, url)
-                    }
-                } else {
-                    onResult(false, response.body()?.message)
+                if (response.isSuccessful) {
+                    val body = response.body() ?: return@launch
+                    if (!body.success) return@launch
+
+                    // ✅ 👉 PASTE HERE (THIS IS THE PLACE)
+                    val imagePath = body.data.image_url
+                    sessionManager?.saveProfileImageUrl(imagePath)
+
+                    profileImageUrl.value =
+                        AuthApiClient.IMAGE_BASE_URL + imagePath
                 }
 
             } catch (e: Exception) {
-                onResult(false, e.message)
+                e.printStackTrace()
             }
         }
     }

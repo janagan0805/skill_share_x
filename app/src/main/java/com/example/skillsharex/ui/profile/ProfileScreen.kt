@@ -1,7 +1,5 @@
 package com.example.skillsharex.ui.profile
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,13 +26,9 @@ import coil.compose.AsyncImage
 import com.example.skillsharex.model.Course
 import com.example.skillsharex.navigation.Screen
 import com.example.skillsharex.network.AuthApiClient
-import com.example.skillsharex.utils.FileUtils
 import com.example.skillsharex.utils.SessionManager
 import com.example.skillsharex.viewmodel.ProfileViewModel
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.asRequestBody
 
 @Composable
 fun ProfileScreen(
@@ -45,8 +39,11 @@ fun ProfileScreen(
     val context = LocalContext.current
     val session = SessionManager(context)
     val scope = rememberCoroutineScope()
+
+    /* 🔑 INIT VIEWMODEL + FETCH PROFILE */
     LaunchedEffect(Unit) {
-        viewModel.fetchProfile(viewModel.userId)
+        viewModel.initSession(context)
+        viewModel.fetchProfile()
     }
 
 
@@ -75,7 +72,13 @@ fun ProfileScreen(
 
         Spacer(Modifier.height(20.dp))
 
-        ProfileHeader(viewModel)
+        ProfileHeader(
+            viewModel = viewModel,
+            userName = session.getUserName() ?: "User",
+            onEditClick = {
+                navController.navigate(Screen.EditProfile.route)
+            }
+        )
 
         SkillSection()
         StatsRow()
@@ -90,8 +93,10 @@ fun ProfileScreen(
                     text = {
                         Text(
                             text,
-                            fontWeight = if (selectedTab == index)
-                                FontWeight.Bold else FontWeight.Normal
+                            fontWeight =
+                                if (selectedTab == index)
+                                    FontWeight.Bold
+                                else FontWeight.Normal
                         )
                     }
                 )
@@ -114,8 +119,7 @@ fun ProfileScreen(
                             if (userId != null) {
                                 AuthApiClient.api.logout(userId)
                             }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+                        } catch (_: Exception) {
                         } finally {
                             session.logout()
                             navController.navigate("login") {
@@ -135,55 +139,11 @@ fun ProfileScreen(
 /* ---------------- PROFILE HEADER ---------------- */
 
 @Composable
-fun ProfileHeader(viewModel: ProfileViewModel) {
-
-    val context = LocalContext.current
-    val session = SessionManager(context)
-    val scope = rememberCoroutineScope()
-
-    val userName = session.getUserName() ?: "User"
-
-    // ✅ FIX: SINGLE, VALID IMAGE STATE
-    var profileImageUri by remember {
-        mutableStateOf(
-            session.getProfileImageUrl()?.let {
-                "http://172.25.105.154/skillsharex_backend/$it"
-            }
-        )
-    }
-
-    val imagePicker =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            uri ?: return@rememberLauncherForActivityResult
-
-            scope.launch {
-                val file = FileUtils.getFileFromUri(context, uri)
-
-                val requestBody =
-                    file.asRequestBody("image/*".toMediaType())
-
-                val part = MultipartBody.Part.createFormData(
-                    "image",
-                    file.name,
-                    requestBody
-                )
-
-                val userId = session.getUserId()?.toString() ?: return@launch
-
-                val response = AuthApiClient.api.uploadProfileImage(
-                    image = part,
-                    userId = userId
-                )
-
-                if (response.isSuccessful) {
-                    response.body()?.data?.image_url?.let { url ->
-                        session.saveProfileImageUrl(url)
-                        profileImageUri =
-                            "http://172.25.105.154/skillsharex_backend/$url"
-                    }
-                }
-            }
-        }
+fun ProfileHeader(
+    viewModel: ProfileViewModel,
+    userName: String,
+    onEditClick: () -> Unit
+) {
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -191,9 +151,12 @@ fun ProfileHeader(viewModel: ProfileViewModel) {
     ) {
 
         Box {
-            if (profileImageUri != null) {
+
+            val imageUrl = viewModel.profileImageUrl.value
+
+            if (imageUrl != null) {
                 AsyncImage(
-                    model = profileImageUri,
+                    model = imageUrl + "?t=" + System.currentTimeMillis(),
                     contentDescription = null,
                     modifier = Modifier
                         .size(100.dp)
@@ -201,6 +164,7 @@ fun ProfileHeader(viewModel: ProfileViewModel) {
                         .background(Color.White),
                     contentScale = ContentScale.Crop
                 )
+
             } else {
                 Icon(
                     Icons.Default.Person,
@@ -215,14 +179,14 @@ fun ProfileHeader(viewModel: ProfileViewModel) {
 
             Icon(
                 Icons.Default.Edit,
-                contentDescription = null,
+                contentDescription = "Edit",
                 tint = Color.White,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .size(28.dp)
                     .clip(CircleShape)
                     .background(Color(0xFF1022FF))
-                    .clickable { imagePicker.launch("image/*") }
+                    .clickable { onEditClick() }
                     .padding(6.dp)
             )
         }
@@ -230,7 +194,7 @@ fun ProfileHeader(viewModel: ProfileViewModel) {
         Spacer(Modifier.height(10.dp))
 
         Text(userName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Text("Mentor • SkillShareX", fontSize = 14.sp, color = Color.DarkGray)
+        Text(viewModel.role.value, fontSize = 14.sp, color = Color.DarkGray)
     }
 }
 
@@ -274,6 +238,8 @@ fun ProfileTabContent(
     }
 }
 
+/* ---------------- OTHER UI (UNCHANGED) ---------------- */
+
 @Composable
 fun CourseRow(course: Course) {
     Card(
@@ -289,8 +255,6 @@ fun CourseRow(course: Course) {
     }
 }
 
-/* ---------------- SKILLS ---------------- */
-
 @Composable
 fun SkillSection() {
     val skills = listOf("UI/UX", "Java", "Figma", "Photoshop")
@@ -304,8 +268,6 @@ fun SkillSection() {
         }
     }
 }
-
-/* ---------------- STATS ---------------- */
 
 @Composable
 fun StatsRow() {
@@ -327,8 +289,6 @@ fun StatItem(value: String, label: String) {
         Text(label, fontSize = 12.sp, color = Color.DarkGray)
     }
 }
-
-/* ---------------- SESSIONS ---------------- */
 
 @Composable
 fun SessionsTabContent() {
@@ -353,8 +313,6 @@ fun SessionsTabContent() {
         }
     }
 }
-
-/* ---------------- REVIEWS ---------------- */
 
 @Composable
 fun ReviewsTabContent() {

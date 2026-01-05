@@ -1,8 +1,8 @@
 package com.example.skillsharex.model
 
 data class GetProfileResponse(
-    val status: Boolean,
-    val data: ProfileData
+    val success: Boolean,
+    val data: ProfileData?
 )
 
 data class ProfileData(

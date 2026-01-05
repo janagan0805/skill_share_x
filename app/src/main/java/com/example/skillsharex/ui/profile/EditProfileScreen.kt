@@ -27,7 +27,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.ui.layout.ContentScale
-import com.example.skillsharex.utils.FileUtils
 import com.example.skillsharex.viewmodel.ProfileViewModel
 
 /* ---------------- THEME COLORS ---------------- */
@@ -44,10 +43,14 @@ fun EditProfileScreen(
 
     val context = LocalContext.current
 
+    // 🔑 Initialize session for ViewModel (IMPORTANT)
+    LaunchedEffect(Unit) {
+        viewModel.initSession(context)
+    }
+
     var newSkill by remember { mutableStateOf("") }
     var uploading by remember { mutableStateOf(false) }
 
-    // ✅ FIX: declare selectedImageUri
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     /* ---------------- IMAGE PICKER ---------------- */
@@ -137,22 +140,16 @@ fun EditProfileScreen(
 
                 Spacer(Modifier.height(8.dp))
 
-                // ✅ FIX: Upload button logic now valid
                 if (selectedImageUri != null) {
                     Button(
                         onClick = {
                             uploading = true
-
-                            val file =
-                                FileUtils.getFileFromUri(
-                                    context,
-                                    selectedImageUri!!
-                                )
-
-                            viewModel.uploadProfileImage(file.absolutePath) { _, _ ->
-                                uploading = false
-                                selectedImageUri = null
-                            }
+                            viewModel.uploadProfileImage(
+                                context = context,
+                                imageUri = selectedImageUri!!
+                            )
+                            uploading = false
+                            selectedImageUri = null
                         },
                         colors = ButtonDefaults.buttonColors(PrimaryBlue)
                     ) {

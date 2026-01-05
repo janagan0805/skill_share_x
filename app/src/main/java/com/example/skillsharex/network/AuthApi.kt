@@ -1,6 +1,7 @@
 package com.example.skillsharex.network
 
 import com.example.skillsharex.data.model.GenericResponse
+import com.example.skillsharex.data.model.UploadImageData
 import com.example.skillsharex.data.models.UploadImageResponse
 import com.example.skillsharex.model.*
 import retrofit2.http.Field
@@ -31,12 +32,7 @@ interface AuthApi {
         @Field("email") email: String,
         @Field("password") password: String
     ): Response<SignUpResponse>
-    @Multipart
-    @POST("api/auth/upload_profile_image.php")
-    suspend fun uploadProfileImage(
-        @Part image: MultipartBody.Part,
-        @Query("user_id") userId: String
-    ): Response<UploadImageResponse>
+
 
     @GET("api/dashboard/online_mentors.php")
     suspend fun getOnlineMentors(): Response<OnlineMentorsResponse>
@@ -68,16 +64,19 @@ interface AuthApi {
     suspend fun getCourseDetail(
         @Query("course_id") courseId: String
     ): CourseDetailResponse
+
     @Multipart
-    @POST("auth/upload_profile_image.php")
+    @POST("api/auth/upload_profile_image.php")
     suspend fun uploadProfileImage(
         @Part image: MultipartBody.Part,
         @Part("user_id") userId: RequestBody
-    ): Response<GenericResponse>
-    @GET("profile/get_profile.php")
+    ): Response<ApiResponse<UploadImageData>>
+
+    @GET("api/profile/get_profile.php")
     suspend fun getProfile(
         @Query("user_id") userId: Int
-    ): Response<GetProfileResponse>
+    ): Response<ApiResponse<ProfileData>>
+
 
 
 }
