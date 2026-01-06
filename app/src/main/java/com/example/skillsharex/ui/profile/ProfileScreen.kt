@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.skillsharex.model.Course
 import com.example.skillsharex.navigation.Screen
 import com.example.skillsharex.network.AuthApiClient
@@ -63,6 +64,11 @@ fun ProfileScreen(
             e.printStackTrace()
         }
     }
+
+    LaunchedEffect(viewModel.profileImageUrl.value) {
+        viewModel.fetchProfile()
+    }
+
 
     Column(
         modifier = Modifier
@@ -156,7 +162,11 @@ fun ProfileHeader(
 
             if (imageUrl != null) {
                 AsyncImage(
-                    model = imageUrl + "?t=" + System.currentTimeMillis(),
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .diskCacheKey(imageUrl + System.currentTimeMillis())
+                        .memoryCacheKey(imageUrl + System.currentTimeMillis())
+                        .build(),
                     contentDescription = null,
                     modifier = Modifier
                         .size(100.dp)
@@ -164,6 +174,7 @@ fun ProfileHeader(
                         .background(Color.White),
                     contentScale = ContentScale.Crop
                 )
+
 
             } else {
                 Icon(

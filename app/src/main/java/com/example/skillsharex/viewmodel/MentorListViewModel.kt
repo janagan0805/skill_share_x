@@ -34,7 +34,7 @@ class MentorListViewModel : ViewModel() {
                 val response = AuthApiClient.api.getTopMentors()
 
                 if (response.success) {
-                    mentors = response.data
+                    mentors = response.data ?: emptyList()
                 } else {
                     mentors = emptyList()
                     errorMessage = response.message

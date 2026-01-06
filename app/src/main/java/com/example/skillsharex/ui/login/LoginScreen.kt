@@ -14,6 +14,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.skillsharex.network.AuthApiClient
+import com.example.skillsharex.utils.SessionManager
 import kotlinx.coroutines.launch
 
 @Composable
@@ -23,6 +24,9 @@ fun LoginScreen(
     onForgotPasswordClick: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -120,10 +124,19 @@ fun LoginScreen(
                             )
 
                             if (response.status == "success") {
-                                val userName =
-                                    response.user?.full_name ?: "User"
-                                onLoginSuccess(userName)
-                            } else {
+
+                                val user = response.user
+                                    ?: throw Exception("User data missing")
+
+                                // ✅ SAVE SESSION DATA (CRITICAL)
+                                sessionManager.setLoggedIn(true)
+                                sessionManager.saveUserId(user.id)            // 🔑 THIS FIXES EVERYTHING
+                                sessionManager.saveUserName(user.full_name)
+                                sessionManager.saveProfileImageUri(user.profil_image)
+
+                                onLoginSuccess(user.full_name)
+                            }
+                            else {
                                 errorMsg = response.message
                             }
 

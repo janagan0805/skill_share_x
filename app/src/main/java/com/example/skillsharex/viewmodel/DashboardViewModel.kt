@@ -30,27 +30,30 @@ class DashboardViewModel : ViewModel() {
                 val mentorsResponse = AuthApiClient.api.getTopMentors()
                 val coursesResponse = AuthApiClient.api.getAvailableCourses()
 
-                if (mentorsResponse.success) {
-                    mentors = mentorsResponse.data
+                mentors = if (mentorsResponse.success) {
+                    mentorsResponse.data ?: emptyList()
+                } else {
+                    emptyList()
                 }
 
-                if (coursesResponse.success) {
-                    courses = coursesResponse.data
+                courses = if (coursesResponse.success) {
+                    coursesResponse.data ?: emptyList()
+                } else {
+                    emptyList()
                 }
 
             } catch (e: HttpException) {
                 Log.e("DashboardVM", "HTTP ${e.code()} ${e.message()}")
-                courses = emptyList()
                 mentors = emptyList()
-            }
-            catch (e: Exception) {
+                courses = emptyList()
+            } catch (e: Exception) {
                 Log.e("DashboardVM", "Unexpected error", e)
-                courses = emptyList()
                 mentors = emptyList()
-            }
-            finally {
+                courses = emptyList()
+            } finally {
                 isLoading = false
             }
         }
     }
+
 }

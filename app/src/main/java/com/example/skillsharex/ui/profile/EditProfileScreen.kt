@@ -1,8 +1,10 @@
 package com.example.skillsharex.ui.profile
 
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,6 +28,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.layout.ContentScale
 import com.example.skillsharex.viewmodel.ProfileViewModel
 
@@ -34,6 +38,7 @@ private val LavenderBg = Color(0xFFE8E6FF)
 private val HeaderPurple = Color(0xFF544DCA)
 private val PrimaryBlue = Color(0xFF1022FF)
 
+@RequiresApi(Build.VERSION_CODES.P)
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun EditProfileScreen(
@@ -48,11 +53,15 @@ fun EditProfileScreen(
         viewModel.initSession(context)
     }
 
+
     var newSkill by remember { mutableStateOf("") }
     var uploading by remember { mutableStateOf(false) }
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
+    LaunchedEffect(viewModel.profileImageUrl.value) {
+        selectedImageUri = null
+    }
     /* ---------------- IMAGE PICKER ---------------- */
     val imagePicker =
         rememberLauncherForActivityResult(
@@ -68,18 +77,19 @@ fun EditProfileScreen(
             .fillMaxSize()
             .background(LavenderBg)
     ) {
-
-        Column {
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState())
+        ) {
 
             /* ---------------- HEADER ---------------- */
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(HeaderPurple)
+                    .statusBarsPadding()
                     .clip(RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp))
-                    .padding(top = 50.dp, bottom = 20.dp, start = 20.dp, end = 20.dp)
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
-
                 Row(verticalAlignment = Alignment.CenterVertically) {
 
                     Icon(
@@ -143,22 +153,24 @@ fun EditProfileScreen(
                 if (selectedImageUri != null) {
                     Button(
                         onClick = {
-                            uploading = true
                             viewModel.uploadProfileImage(
                                 context = context,
                                 imageUri = selectedImageUri!!
                             )
-                            uploading = false
-                            selectedImageUri = null
                         },
+                        enabled = !viewModel.isUploading.value,
                         colors = ButtonDefaults.buttonColors(PrimaryBlue)
                     ) {
                         Text(
-                            if (uploading) "Uploading..." else "Upload Photo",
+                            if (viewModel.isUploading.value)
+                                "Uploading..."
+                            else
+                                "Upload Photo",
                             color = Color.White
                         )
                     }
                 }
+
             }
 
             Spacer(Modifier.height(30.dp))

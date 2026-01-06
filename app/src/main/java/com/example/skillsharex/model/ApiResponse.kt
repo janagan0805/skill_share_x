@@ -3,5 +3,5 @@ package com.example.skillsharex.model
 data class ApiResponse<T>(
     val success: Boolean,
     val message: String,
-    val data: T
+    val data: T?
 )

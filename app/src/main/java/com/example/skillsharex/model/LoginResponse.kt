@@ -9,5 +9,6 @@ data class LoginResponse(
 data class User(
     val id: Int,
     val full_name: String,
-    val email: String
+    val email: String,
+    val profil_image: String
 )

@@ -66,11 +66,12 @@ interface AuthApi {
     ): CourseDetailResponse
 
     @Multipart
-    @POST("api/auth/upload_profile_image.php")
+    @POST("api/profile/upload_profile_image.php")
     suspend fun uploadProfileImage(
         @Part image: MultipartBody.Part,
         @Part("user_id") userId: RequestBody
     ): Response<ApiResponse<UploadImageData>>
+
 
     @GET("api/profile/get_profile.php")
     suspend fun getProfile(
