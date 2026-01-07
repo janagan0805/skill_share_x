@@ -2,6 +2,7 @@ package com.example.skillsharex.viewmodel
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
@@ -106,19 +107,37 @@ class ProfileViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
+                isUploading.value = true
+
+                // ✅ Get REAL mime type (VERY IMPORTANT)
+                val mimeType =
+                    context.contentResolver.getType(imageUri)
+                        ?: "image/jpeg"
+
+                Log.d("UPLOAD", "MimeType = $mimeType")
+
+
                 val inputStream =
-                    context.contentResolver.openInputStream(imageUri) ?: return@launch
+                    context.contentResolver.openInputStream(imageUri)
+                        ?: return@launch
 
                 val bytes = inputStream.readBytes()
 
                 val requestBody =
-                    bytes.toRequestBody("image/*".toMediaType())
+                    bytes.toRequestBody(mimeType.toMediaType())
+
+                // ✅ Extension based on mime
+                val extension = when (mimeType) {
+                    "image/png" -> "png"
+                    "image/webp" -> "webp"
+                    else -> "jpg"
+                }
 
                 val imagePart =
                     MultipartBody.Part.createFormData(
-                        "image",
-                        "profile_$userId.jpg",
-                        requestBody
+                        name = "image",
+                        filename = "profile_$userId.$extension",
+                        body = requestBody
                     )
 
                 val userIdBody =
@@ -135,16 +154,20 @@ class ProfileViewModel : ViewModel() {
                     val body = response.body() ?: return@launch
                     if (!body.success) return@launch
 
-                    // ✅ 👉 PASTE HERE (THIS IS THE PLACE)
                     val imagePath = body.data?.image_url
-                    sessionManager?.saveProfileImageUrl(imagePath ?: "")
 
-                    profileImageUrl.value =
-                        imagePath?.let{ AuthApiClient.IMAGE_BASE_URL + it }
+                    // ✅ Save locally
+                    imagePath?.let {
+                        sessionManager?.saveProfileImageUrl(it)
+                        profileImageUrl.value =
+                            AuthApiClient.IMAGE_BASE_URL + it
+                    }
                 }
 
             } catch (e: Exception) {
                 e.printStackTrace()
+            } finally {
+                isUploading.value = false
             }
         }
     }

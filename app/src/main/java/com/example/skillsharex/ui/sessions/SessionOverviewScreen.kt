@@ -21,8 +21,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.skillsharex.viewmodel.SessionViewModel
-import com.example.skillsharex.data.model.Session   // ✅ IMPORTANT
-import com.example.skillsharex.data.model.Mentor    // ✅ IMPORTANT
 
 // THEME COLORS
 private val LavenderBg = Color(0xFFE8E6FF)
@@ -36,6 +34,8 @@ fun SessionOverviewScreen(
 ) {
 
     val context = LocalContext.current
+
+    // ✅ SINGLE ViewModel instance
     val sessionViewModel: SessionViewModel = viewModel()
 
     LaunchedEffect(sessionId) {
@@ -44,6 +44,7 @@ fun SessionOverviewScreen(
 
     val session = sessionViewModel.selectedSession.value
 
+    // ✅ LOADING STATE
     if (session == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -54,10 +55,13 @@ fun SessionOverviewScreen(
         return
     }
 
-    // ✅ SAFE PHONE ACCESS
-    val mentorPhone = session.mentor.phone ?: ""
+    // ✅ SAFE mentor access
+    val mentor = session.mentor
+    val mentorPhone = mentor?.phone ?: ""
 
-    val statusColor = when (session.status) {
+    val status = session.status ?: "UNKNOWN"
+
+    val statusColor = when (status) {
         "LIVE" -> Color.Red
         "UPCOMING" -> Color(0xFF425CFF)
         else -> Color.Gray
@@ -101,7 +105,7 @@ fun SessionOverviewScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
 
                     Text(
-                        text = session.title,
+                        text = session.title ?: "",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -110,7 +114,7 @@ fun SessionOverviewScreen(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = "Mentor: ${session.mentor.name}",
+                        text = "Mentor: ${mentor?.name ?: "Not assigned"}",
                         fontSize = 14.sp,
                         color = Color.White.copy(alpha = 0.9f)
                     )
@@ -118,7 +122,7 @@ fun SessionOverviewScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "● ${session.status}",
+                        text = "● $status",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = statusColor
@@ -151,8 +155,10 @@ fun SessionOverviewScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text("Date: ${session.date}")
-                    Text("Time: ${session.start_time} - ${session.end_time}")
+                    Text(text = "Date: ${session.date ?: "N/A"}")
+                    Text(
+                        text = "Time: ${(session.start_time ?: "--")} - ${(session.end_time ?: "--")}"
+                    )
                 }
             }
 
@@ -162,14 +168,14 @@ fun SessionOverviewScreen(
                 onClick = {
                     navController.navigate("live_session/${session.id}")
                 },
-                enabled = session.status != "COMPLETED",
+                enabled = status != "COMPLETED",
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(Icons.Default.PlayArrow, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    when (session.status) {
+                    when (status) {
                         "LIVE" -> "Join Session"
                         "UPCOMING" -> "View Session"
                         else -> "Completed"

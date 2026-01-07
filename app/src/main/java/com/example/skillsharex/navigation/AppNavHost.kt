@@ -115,6 +115,10 @@ fun AppNavHost() {
         composable("notifications") { NotificationsScreen(navController) }
 
         /* -------- CHATBOT -------- */
+        composable("session_list") {
+            SessionListScreen(navController)
+        }
+
         composable("chatbot") {
             ChatbotScreen(navController)
         }

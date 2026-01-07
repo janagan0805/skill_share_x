@@ -3,11 +3,14 @@ package com.example.skillsharex.viewmodel
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.skillsharex.data.model.Mentor
 import com.example.skillsharex.data.model.Session
 import com.example.skillsharex.network.ApiClient
 import kotlinx.coroutines.launch
 
 class SessionViewModel : ViewModel() {
+    val mentor = mutableStateOf<Mentor?>(null)
+    val isLoading = mutableStateOf(true)
 
     var sessions = mutableStateOf<List<Session>>(emptyList())
         private set
