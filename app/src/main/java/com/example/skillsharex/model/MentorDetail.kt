@@ -40,8 +40,8 @@ data class MentorDetail(
     val experienceYears: Int,
     val expertiseList: List<String>,
     val image: String?,
-    val status: String
-)
+    val status: String,
+    )
 
 
 
