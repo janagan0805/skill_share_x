@@ -6,21 +6,32 @@ val sampleMentorDetails = listOf(
 
     MentorDetail(
         id = 1,
-        name = "Karthik",
+        name = "Jana",
         skill = "Android Development",
-        rating = 4.9,
+        phone = "919876543210",
+        rating = 4.8,
         ratingCount = 120,
-        bio = "Android developer with 6+ years of experience building scalable apps using Kotlin and Jetpack Compose.",
+        bio = "Senior Android mentor with extensive experience in building scalable Android applications, mentoring learners, and delivering industry-focused training using modern Android frameworks.",
         experienceYears = 6,
-        expertiseList = listOf("Kotlin", "Jetpack Compose", "MVVM", "Coroutines"),
-        image = "uploads/mentors/karthik.png",
+        expertiseList = listOf(
+            "Kotlin",
+            "Jetpack Compose",
+            "MVVM Architecture",
+            "Firebase",
+            "REST APIs",
+            "Room Database",
+            "Android UI/UX"
+        ),
+        image = "uploads/mentors/jana.png",
         status = "online"
     ),
 
-    MentorDetail(
+
+            MentorDetail(
         id = 2,
         name = "Dilip",
         skill = "UI/UX Design",
+        phone = "919876543211",   // ✅ ADDED
         rating = 4.8,
         ratingCount = 95,
         bio = "UI/UX designer specializing in mobile-first experiences with strong usability principles.",
@@ -34,6 +45,7 @@ val sampleMentorDetails = listOf(
         id = 3,
         name = "Pranav",
         skill = "Java Backend",
+        phone = "919876543212",   // ✅ ADDED
         rating = 4.7,
         ratingCount = 80,
         bio = "Backend engineer with deep expertise in Java, APIs, and system design.",
@@ -47,6 +59,7 @@ val sampleMentorDetails = listOf(
         id = 4,
         name = "Gowtham",
         skill = "Graphic Design",
+        phone = "919876543213",   // ✅ ADDED
         rating = 4.6,
         ratingCount = 70,
         bio = "Graphic designer focused on branding, visual storytelling, and digital creatives.",
@@ -60,6 +73,7 @@ val sampleMentorDetails = listOf(
         id = 5,
         name = "Dhanush",
         skill = "Photoshop",
+        phone = "919876543214",   // ✅ ADDED
         rating = 4.7,
         ratingCount = 60,
         bio = "Photoshop artist with hands-on experience in photo manipulation and social media creatives.",

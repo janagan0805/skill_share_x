@@ -10,6 +10,7 @@ import com.example.skillsharex.model.MentorDetail
 import com.example.skillsharex.network.AuthApiClient
 import kotlinx.coroutines.launch
 
+
 class MentorDetailViewModel : ViewModel() {
 
     var mentor by mutableStateOf<MentorDetail?>(null)
@@ -20,6 +21,7 @@ class MentorDetailViewModel : ViewModel() {
 
     var errorMessage by mutableStateOf<String?>(null)
         private set
+
 
     /**
      * Load mentor detail from backend

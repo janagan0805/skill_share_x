@@ -50,6 +50,31 @@ class MentorListViewModel : ViewModel() {
         }
     }
 
+    fun loadMentorsList() {
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+
+            try {
+                val response = AuthApiClient.api.getMentorsList()
+
+                if (response.success) {
+                    mentors = response.data ?: emptyList()
+                } else {
+                    mentors = emptyList()
+                    errorMessage = response.message
+                }
+
+            } catch (e: Exception) {
+                Log.e("MentorListVM", "Failed to load mentors", e)
+                mentors = emptyList()
+                errorMessage = "Unable to load mentors"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
     /**
      * Optional: clear state when leaving screen
      */

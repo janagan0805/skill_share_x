@@ -1,6 +1,7 @@
 package com.example.skillsharex.ui.session
 
-import androidx.compose.foundation.background
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -9,16 +10,21 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.skillsharex.viewmodel.SessionViewModel
+import com.example.skillsharex.data.model.Session   // ✅ IMPORTANT
+import com.example.skillsharex.data.model.Mentor    // ✅ IMPORTANT
 
-// THEME COLORS (same as HomeDashboard)
+// THEME COLORS
 private val LavenderBg = Color(0xFFE8E6FF)
 private val HeaderPurple = Color(0xFF544DCA)
 
@@ -28,6 +34,34 @@ fun SessionOverviewScreen(
     navController: NavController,
     sessionId: String
 ) {
+
+    val context = LocalContext.current
+    val sessionViewModel: SessionViewModel = viewModel()
+
+    LaunchedEffect(sessionId) {
+        sessionViewModel.loadSessionDetail(sessionId.toInt())
+    }
+
+    val session = sessionViewModel.selectedSession.value
+
+    if (session == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    // ✅ SAFE PHONE ACCESS
+    val mentorPhone = session.mentor.phone ?: ""
+
+    val statusColor = when (session.status) {
+        "LIVE" -> Color.Red
+        "UPCOMING" -> Color(0xFF425CFF)
+        else -> Color.Gray
+    }
 
     Scaffold(
         containerColor = LavenderBg,
@@ -67,7 +101,7 @@ fun SessionOverviewScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
 
                     Text(
-                        text = "Android Development",
+                        text = session.title,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -76,7 +110,7 @@ fun SessionOverviewScreen(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = "Mentor: Karthick",
+                        text = "Mentor: ${session.mentor.name}",
                         fontSize = 14.sp,
                         color = Color.White.copy(alpha = 0.9f)
                     )
@@ -84,10 +118,10 @@ fun SessionOverviewScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "● LIVE",
+                        text = "● ${session.status}",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Red
+                        color = statusColor
                     )
                 }
             }
@@ -109,32 +143,41 @@ fun SessionOverviewScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Learn the fundamentals of Android development using Kotlin and Jetpack Compose. This session covers UI basics, navigation, and best practices.",
+                        text = session.description
+                            ?: "This session will be handled by the mentor.",
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text("Duration: 1 Hour")
-                    Text("Level: Beginner")
+                    Text("Date: ${session.date}")
+                    Text("Time: ${session.start_time} - ${session.end_time}")
                 }
             }
 
-            /* -------- ACTION BUTTONS -------- */
+            /* -------- JOIN SESSION -------- */
 
             Button(
                 onClick = {
-                    navController.navigate("live_session/$sessionId")
+                    navController.navigate("live_session/${session.id}")
                 },
+                enabled = session.status != "COMPLETED",
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(Icons.Default.PlayArrow, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Join Session")
+                Text(
+                    when (session.status) {
+                        "LIVE" -> "Join Session"
+                        "UPCOMING" -> "View Session"
+                        else -> "Completed"
+                    }
+                )
             }
 
+            /* -------- CHAT / CALL -------- */
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -142,7 +185,15 @@ fun SessionOverviewScreen(
             ) {
 
                 OutlinedButton(
-                    onClick = { /* later → ChatScreen */ },
+                    onClick = {
+                        if (mentorPhone.isNotEmpty()) {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("https://wa.me/$mentorPhone")
+                            )
+                            context.startActivity(intent)
+                        }
+                    },
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.Chat, contentDescription = null)
@@ -151,7 +202,15 @@ fun SessionOverviewScreen(
                 }
 
                 OutlinedButton(
-                    onClick = { /* later → CallScreen */ },
+                    onClick = {
+                        if (mentorPhone.isNotEmpty()) {
+                            val intent = Intent(
+                                Intent.ACTION_DIAL,
+                                Uri.parse("tel:$mentorPhone")
+                            )
+                            context.startActivity(intent)
+                        }
+                    },
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.Call, contentDescription = null)

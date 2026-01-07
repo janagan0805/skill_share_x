@@ -16,40 +16,35 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-
-/* ---------------- DATA MODEL ---------------- */
-
-data class Session(
-    val id: String,
-    val mentor: String,
-    val skill: String,
-    val time: String,
-    val status: SessionStatus
-)
-
-enum class SessionStatus {
-    LIVE, UPCOMING, COMPLETED
-}
-
-/* ---------------- SAMPLE DATA ---------------- */
-
-private val sessions = listOf(
-    Session("1", "Karthick", "Android Development", "Now • 45 mins", SessionStatus.LIVE),
-    Session("2", "Saranraj", "UI/UX Design", "Today 6:00 PM", SessionStatus.UPCOMING),
-    Session("3", "Pranav", "Java Basics", "Tomorrow 10:00 AM", SessionStatus.UPCOMING),
-    Session("4", "Gowtham", "Photoshop Tips", "Completed", SessionStatus.COMPLETED)
-)
-
-/* ---------------- SESSION SCREEN ---------------- */
+import com.example.skillsharex.viewmodel.SessionViewModel
+import com.example.skillsharex.data.model.Session   // ✅ CORRECT IMPORT
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionScreen(
     navController: NavController
 ) {
+
+    val sessionViewModel: SessionViewModel = viewModel()
+
     var selectedTab by remember { mutableStateOf(0) }
     val tabs = listOf("Live", "Upcoming", "My Sessions")
+
+    // 🔥 Load sessions from backend
+    LaunchedEffect(Unit) {
+        sessionViewModel.loadSessions()
+    }
+
+    // ✅ Correct state read
+    val allSessions = sessionViewModel.sessions.value
+
+    val filteredSessions = when (selectedTab) {
+        0 -> allSessions.filter { it.status == "LIVE" }
+        1 -> allSessions.filter { it.status == "UPCOMING" }
+        else -> allSessions
+    }
 
     Scaffold(
         containerColor = Color(0xFFE8E6FF),
@@ -103,14 +98,6 @@ fun SessionScreen(
                 }
             }
 
-            /* -------- FILTER SESSIONS -------- */
-
-            val filteredSessions = when (selectedTab) {
-                0 -> sessions.filter { it.status == SessionStatus.LIVE }
-                1 -> sessions.filter { it.status == SessionStatus.UPCOMING }
-                else -> sessions
-            }
-
             /* -------- SESSION LIST -------- */
 
             LazyColumn(
@@ -119,12 +106,10 @@ fun SessionScreen(
             ) {
                 items(filteredSessions) { session ->
 
-                    // ✅ CLICKING THE CARD GOES TO SESSION DETAIL
                     SessionCard(
                         session = session,
                         onClick = {
                             navController.navigate("sessionDetail/${session.id}")
-
                         }
                     )
                 }
@@ -142,9 +127,9 @@ fun SessionCard(
 ) {
 
     val statusColor = when (session.status) {
-        SessionStatus.LIVE -> Color(0xFF2ECC71)
-        SessionStatus.UPCOMING -> Color(0xFF425CFF)
-        SessionStatus.COMPLETED -> Color.Gray
+        "LIVE" -> Color(0xFF2ECC71)
+        "UPCOMING" -> Color(0xFF425CFF)
+        else -> Color.Gray
     }
 
     Card(
@@ -158,7 +143,7 @@ fun SessionCard(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    session.skill,
+                    text = session.title,
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
@@ -166,7 +151,7 @@ fun SessionCard(
                 Spacer(modifier = Modifier.weight(1f))
 
                 Text(
-                    session.status.name,
+                    text = session.status,
                     color = statusColor,
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp
@@ -175,14 +160,22 @@ fun SessionCard(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            Text("Mentor: ${session.mentor}", fontSize = 13.sp)
-            Text(session.time, fontSize = 12.sp, color = Color.Gray)
+            Text(
+                text = "Mentor: ${session.mentor.name}",
+                fontSize = 13.sp
+            )
+
+            Text(
+                text = "${session.date} • ${session.start_time}",
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             Button(
-                onClick = { /* later: chat / call */ },
-                enabled = session.status != SessionStatus.COMPLETED,
+                onClick = onClick,
+                enabled = session.status != "COMPLETED",
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = statusColor)
             ) {
@@ -190,9 +183,9 @@ fun SessionCard(
                 Spacer(Modifier.width(6.dp))
                 Text(
                     when (session.status) {
-                        SessionStatus.LIVE -> "Join Now"
-                        SessionStatus.UPCOMING -> "Set Reminder"
-                        SessionStatus.COMPLETED -> "Completed"
+                        "LIVE" -> "Join Now"
+                        "UPCOMING" -> "View Details"
+                        else -> "Completed"
                     }
                 )
             }

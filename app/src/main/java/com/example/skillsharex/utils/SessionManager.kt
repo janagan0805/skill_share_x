@@ -25,12 +25,7 @@ class SessionManager(context: Context) {
     }
 
     fun logout() {
-        prefs.edit()
-            .remove("profile_image_url")
-            .remove("user_id")
-            .remove("user_name")
-            .putBoolean(KEY_LOGGED_IN, false)
-            .apply()
+        prefs.edit().clear().apply()
     }
 
     /* ---------- USER ---------- */
@@ -53,9 +48,12 @@ class SessionManager(context: Context) {
         prefs.edit().putBoolean(KEY_FIRST_LAUNCH, false).apply()
     }
     fun saveProfileImageUri(uri: String?) {
-        prefs.edit().putString("profile_image_uri", uri).apply()
+        prefs.edit().putString("profile_image", uri ?: "").apply()
     }
 
+    fun getProfileImageUri(): String? {
+        return prefs.getString("profile_image_uri", null)
+    }
     fun saveUserId(userId: Int) {
         prefs.edit().putInt("user_id", userId).apply()
     }
@@ -63,7 +61,14 @@ class SessionManager(context: Context) {
         return prefs.getInt("user_id", 0)
     }
 
+    fun saveProfileImageUrl(url: String) {
+        prefs.edit().putString("profile_image_url", url).apply()
+    }
+
     fun getProfileImageUrl(): String? {
         return prefs.getString("profile_image_url", null)
     }
+
+
+
 }

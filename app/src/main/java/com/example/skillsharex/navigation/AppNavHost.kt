@@ -1,13 +1,12 @@
 package com.example.skillsharex.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
-import com.example.skillsharex.ui.call.CallScreen
-import com.example.skillsharex.ui.chat.ChatScreen
 import com.example.skillsharex.ui.chatbot.ChatbotScreen
 import com.example.skillsharex.ui.community.*
 import com.example.skillsharex.ui.course.CourseDetailScreen
@@ -34,12 +33,13 @@ fun AppNavHost() {
 
     val navController = rememberNavController()
     val context = LocalContext.current
-    val session = SessionManager(context)
+    val sessionManager = remember { SessionManager(context) }
 
-    /* ---------- SINGLE SOURCE OF TRUTH (VIEWMODELS) ---------- */
+    /* ---------- VIEWMODELS (SINGLE SOURCE OF TRUTH) ---------- */
     val profileViewModel: ProfileViewModel = viewModel()
     val communityViewModel: CommunityViewModel = viewModel()
-    val createPostViewModel: CreatePostEventViewModel = viewModel()
+    val createPostViewModel: CreatePostViewModel = viewModel()
+    val sessionViewModel: SessionViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -50,12 +50,12 @@ fun AppNavHost() {
         composable("splash") {
             AppSplashScreen {
                 when {
-                    session.isFirstLaunch() ->
+                    sessionManager.isFirstLaunch() ->
                         navController.navigate("onboarding") {
                             popUpTo("splash") { inclusive = true }
                         }
 
-                    session.isLoggedIn() ->
+                    sessionManager.isLoggedIn() ->
                         navController.navigate("home") {
                             popUpTo("splash") { inclusive = true }
                         }
@@ -71,7 +71,7 @@ fun AppNavHost() {
         composable("onboarding") {
             OnboardingScreen(
                 onFinish = {
-                    session.setFirstLaunchDone()
+                    sessionManager.setFirstLaunchDone()
                     navController.navigate("login") {
                         popUpTo("onboarding") { inclusive = true }
                     }
@@ -83,8 +83,8 @@ fun AppNavHost() {
         composable("login") {
             LoginScreen(
                 onLoginSuccess = { userName ->
-                    session.saveUserName(userName)
-                    session.setLoggedIn(true)
+                    sessionManager.saveUserName(userName)
+                    sessionManager.setLoggedIn(true)
                     navController.navigate("home") {
                         popUpTo("login") { inclusive = true }
                     }
@@ -114,11 +114,10 @@ fun AppNavHost() {
         composable("mentors") { MentorListScreen(navController) }
         composable("notifications") { NotificationsScreen(navController) }
 
-        /*----------CHATBOT--------*/
+        /* -------- CHATBOT -------- */
         composable("chatbot") {
             ChatbotScreen(navController)
         }
-
 
         /* -------- COMMUNITY -------- */
         composable("community") {
@@ -131,7 +130,8 @@ fun AppNavHost() {
         composable("create_post") {
             CreatePostScreen(
                 navController = navController,
-                viewModel = createPostViewModel
+                communityViewModel = communityViewModel,
+                createPostViewModel = createPostViewModel
             )
         }
 
@@ -160,16 +160,16 @@ fun AppNavHost() {
             )
         }
 
-        composable("settings") { SettingsScreen(navController) }
+        composable("settings") {
+            SettingsScreen(navController)
+        }
 
-        /* -------- SESSIONS -------- */
+        /* -------- REQUESTS -------- */
         composable(Screen.Requests.route) {
             MentorshipRequestsScreen(navController)
         }
 
-        composable(Screen.SessionList.route) {
-            SessionListScreen(navController)
-        }
+        /* -------- SESSIONS (FINAL FLOW) -------- */
 
         composable("sessions") {
             SessionScreen(navController)
@@ -212,8 +212,8 @@ fun AppNavHost() {
             }
         }
 
-        composable("chat/{mentorId}") { ChatScreen(navController) }
-        composable("call") { CallScreen(navController) }
-        composable(Screen.SkillFilter.route) { SkillFilterScreen(navController) }
+        composable(Screen.SkillFilter.route) {
+            SkillFilterScreen(navController)
+        }
     }
 }

@@ -33,6 +33,7 @@ data class MentorDetail(
     val id: Int,
     val name: String,
     val skill: String,
+    val phone: String,
     val rating: Double,
     val ratingCount: Int,
     val bio: String,
@@ -41,4 +42,6 @@ data class MentorDetail(
     val image: String?,
     val status: String
 )
+
+
 

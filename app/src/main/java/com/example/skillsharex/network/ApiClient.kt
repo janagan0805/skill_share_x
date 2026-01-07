@@ -3,16 +3,16 @@ package com.example.skillsharex.network
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-object CommunityService {
+object ApiClient {
 
     private const val BASE_URL =
-        "http://10.88.233.111/skillsharex_backend/"
+        "http://10.0.2.2/skillsharex_backend/api/sessions/"
 
-    val api: CommunityApi by lazy {
+    val sessionApi: SessionApi by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(CommunityApi::class.java)
+            .create(SessionApi::class.java)
     }
 }

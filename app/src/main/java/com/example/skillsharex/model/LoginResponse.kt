@@ -1,4 +1,4 @@
-package com.example.skillsharex.model
+package com.example.skillsharex.data.models
 
 data class LoginResponse(
     val status: String,

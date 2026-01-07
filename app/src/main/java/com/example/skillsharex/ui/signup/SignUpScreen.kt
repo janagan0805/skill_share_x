@@ -1,15 +1,19 @@
 package com.example.skillsharex.ui.signup
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext   // ✅ FIX
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,11 +26,13 @@ fun SignUpScreen(
     onBackToLogin: () -> Unit
 ) {
 
+    val context = LocalContext.current          // ✅ FIX
     val scope = rememberCoroutineScope()
 
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
 
     var errorMsg by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
@@ -91,6 +97,22 @@ fun SignUpScreen(
 
             Spacer(Modifier.height(16.dp))
 
+            OutlinedTextField(
+                value = phone,
+                onValueChange = {
+                    if (it.length <= 12) phone = it
+                },
+                label = { Text("Mobile Number") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Phone
+                ),
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                colors = textFieldColors()
+            )
+
+            Spacer(Modifier.height(16.dp))
+
             if (errorMsg.isNotEmpty()) {
                 Text(errorMsg, color = Color.Red)
                 Spacer(Modifier.height(8.dp))
@@ -102,8 +124,20 @@ fun SignUpScreen(
                 shape = RoundedCornerShape(12.dp),
                 onClick = {
 
-                    if (name.isBlank() || email.isBlank() || password.isBlank()) {
+                    // ✅ VALIDATION (correct place)
+                    if (name.isBlank() || email.isBlank() ||
+                        password.isBlank() || phone.isBlank()
+                    ) {
                         errorMsg = "All fields are required"
+                        return@Button
+                    }
+
+                    if (phone.length < 10) {
+                        Toast.makeText(
+                            context,
+                            "Enter valid mobile number",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         return@Button
                     }
 
@@ -115,12 +149,13 @@ fun SignUpScreen(
                             val response = AuthApiClient.api.register(
                                 name = name,
                                 email = email,
-                                password = password
+                                password = password,
+                                phone = phone          // ✅ SENT TO BACKEND
                             )
 
                             if (response.isSuccessful) {
                                 val body = response.body()
-                                if (body?.status == true) {
+                                if (body?.success == true) {
                                     onSignUpSuccess()
                                 } else {
                                     errorMsg = body?.message ?: "Registration failed"

@@ -1,7 +1,9 @@
 package com.example.skillsharex.network
 
 import com.example.skillsharex.data.model.GenericResponse
+import com.example.skillsharex.data.model.Session
 import com.example.skillsharex.data.model.UploadImageData
+import com.example.skillsharex.data.models.LoginResponse
 import com.example.skillsharex.data.models.UploadImageResponse
 import com.example.skillsharex.model.*
 import retrofit2.http.Field
@@ -30,7 +32,8 @@ interface AuthApi {
     suspend fun register(
         @Field("full_name") name: String,
         @Field("email") email: String,
-        @Field("password") password: String
+        @Field("password") password: String,
+        @Field("phone") phone: String
     ): Response<SignUpResponse>
 
 
@@ -50,6 +53,9 @@ interface AuthApi {
 
     @GET("api/mentors/top_mentors.php")
     suspend fun getTopMentors(): ApiResponse<List<MentorData>>
+
+    @GET("api/mentors/get_mentors_list.php")
+    suspend fun getMentorsList(): ApiResponse<List<MentorData>>
 
     @GET("api/mentors/get_mentor_detail.php")
     suspend fun getMentorDetail(
@@ -77,6 +83,14 @@ interface AuthApi {
     suspend fun getProfile(
         @Query("user_id") userId: Int
     ): Response<ApiResponse<ProfileData>>
+    @GET("get_sessions.php")
+    suspend fun getSessions():
+            Response<ApiResponse<List<Session>>>
+
+    @GET("get_session_detail.php")
+    suspend fun getSessionDetail(
+        @Query("session_id") sessionId: Int
+    ): Response<ApiResponse<Session>>
 
 
 

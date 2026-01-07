@@ -44,7 +44,7 @@ fun MentorListScreen(
     var searchText by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        viewModel.loadMentors()
+        viewModel.loadMentorsList()
     }
 
     Box(
@@ -78,7 +78,7 @@ fun MentorListScreen(
                     Spacer(modifier = Modifier.width(12.dp))
 
                     Text(
-                        text = "Top Mentors",
+                        text = "Mentors List",
                         color = Color.White,
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Bold

@@ -6,14 +6,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.VideoCall
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.skillsharex.viewmodel.SessionViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -22,40 +24,28 @@ fun SessionDetailScreen(
     sessionId: String
 ) {
 
-    // 🔹 TEMP DATA (replace with API later)
-    val sessionTitle: String
-    val mentorName: String
-    val status: String
-    val time: String
+    val sessionViewModel: SessionViewModel = viewModel()
 
-    when (sessionId) {
-        "1" -> {
-            sessionTitle = "Android Development"
-            mentorName = "Karthick"
-            status = "LIVE"
-            time = "Now • 45 mins"
-        }
-        "2" -> {
-            sessionTitle = "UI/UX Design"
-            mentorName = "Saranraj"
-            status = "UPCOMING"
-            time = "Today 6:00 PM"
-        }
-        "3" -> {
-            sessionTitle = "Java Basics"
-            mentorName = "Pranav"
-            status = "UPCOMING"
-            time = "Tomorrow 10:00 AM"
-        }
-        else -> {
-            sessionTitle = "Photoshop Tips"
-            mentorName = "Gowtham"
-            status = "COMPLETED"
-            time = "Completed"
-        }
+    // 🔥 LOAD SESSION DETAIL FROM BACKEND
+    LaunchedEffect(sessionId) {
+        sessionViewModel.loadSessionDetail(sessionId.toInt())
     }
 
-    val statusColor = when (status) {
+    // ✅ CORRECT STATE ACCESS
+    val session = sessionViewModel.selectedSession.value
+
+    // Loading state
+    if (session == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    val statusColor = when (session.status) {
         "LIVE" -> Color(0xFF2ECC71)
         "UPCOMING" -> Color(0xFF425CFF)
         else -> Color.Gray
@@ -101,7 +91,7 @@ fun SessionDetailScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
 
                     Text(
-                        text = sessionTitle,
+                        text = session.title,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -109,7 +99,7 @@ fun SessionDetailScreen(
                     Spacer(Modifier.height(6.dp))
 
                     Text(
-                        text = "Mentor: $mentorName",
+                        text = "Mentor: ${session.mentor.name}",
                         fontSize = 14.sp,
                         color = Color.DarkGray
                     )
@@ -117,7 +107,7 @@ fun SessionDetailScreen(
                     Spacer(Modifier.height(6.dp))
 
                     Text(
-                        text = time,
+                        text = "${session.date} • ${session.start_time} - ${session.end_time}",
                         fontSize = 13.sp,
                         color = Color.Gray
                     )
@@ -125,7 +115,7 @@ fun SessionDetailScreen(
                     Spacer(Modifier.height(10.dp))
 
                     Text(
-                        text = status,
+                        text = session.status,
                         color = statusColor,
                         fontWeight = FontWeight.Bold
                     )
@@ -143,7 +133,8 @@ fun SessionDetailScreen(
                     Text("About this session", fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "In this session, the mentor will explain core concepts, share practical tips, and answer your questions live."
+                        text = session.description
+                            ?: "Session details will be explained by the mentor."
                     )
                 }
             }
@@ -153,17 +144,19 @@ fun SessionDetailScreen(
             /* -------- ACTION BUTTON -------- */
 
             Button(
-                onClick = { navController.navigate("chat/${sessionId}") },
-                enabled = status != "COMPLETED",
+                onClick = {
+                    navController.navigate("live_session/${session.id}")
+                },
+                enabled = session.status != "COMPLETED",
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = statusColor)
             ) {
                 Icon(Icons.Default.VideoCall, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    when (status) {
+                    when (session.status) {
                         "LIVE" -> "Join Now"
-                        "UPCOMING" -> "Set Reminder"
+                        "UPCOMING" -> "View Session"
                         else -> "Completed"
                     }
                 )

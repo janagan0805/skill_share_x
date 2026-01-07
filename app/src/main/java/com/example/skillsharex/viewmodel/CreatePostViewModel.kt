@@ -1,78 +1,77 @@
 package com.example.skillsharex.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.skillsharex.network.CommunityService
+import com.example.skillsharex.model.community.CommunityPost
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
-data class CreatePostState(
-    val postType: String = "discussion",
+data class CreatePostUiState(
     val title: String = "",
     val description: String = "",
-    val isSubmitting: Boolean = false,
-    val isSuccess: Boolean = false,
-    val errorMessage: String? = null
+    val selectedTopic: String = "",
+    val isPosting: Boolean = false
 )
+
+sealed interface CreatePostEvent {
+    object PostSuccess : CreatePostEvent
+    data class PostError(val message: String) : CreatePostEvent
+}
 
 class CreatePostViewModel : ViewModel() {
 
-    var isSubmitting by mutableStateOf(false)
+    var uiState by mutableStateOf(CreatePostUiState())
         private set
 
-    var submitSuccess by mutableStateOf(false)
-        private set
+    private val _events = MutableSharedFlow<CreatePostEvent>()
+    val events = _events.asSharedFlow()
 
-    var errorMessage by mutableStateOf<String?>(null)
-        private set
+    val isPostButtonEnabled: Boolean
+        get() = uiState.title.isNotBlank()
+                && uiState.description.isNotBlank()
+                && uiState.selectedTopic.isNotBlank()
 
-    /**
-     * Create a community post
-     * NOTE:
-     * For Phase-2 demo, backend may not persist yet.
-     * This is still production-structured.
-     */
-    fun createPost(
-        userId: Int,
-        postType: String,
-        title: String,
-        description: String
-    ) {
-        if (title.isBlank() || description.isBlank()) {
-            errorMessage = "Title and description cannot be empty"
-            return
-        }
-
-        viewModelScope.launch {
-            isSubmitting = true
-            errorMessage = null
-            submitSuccess = false
-
-            try {
-                // 🔹 TEMP: backend not implemented yet
-                // Replace with real API when ready
-                // CommunityService.api.createPost(...)
-
-                Log.d(
-                    "CreatePostVM",
-                    "Create post → userId=$userId, type=$postType, title=$title"
-                )
-
-                // Simulate success for demo
-                submitSuccess = true
-
-            } catch (e: Exception) {
-                Log.e("CreatePostVM", "Post creation failed", e)
-                errorMessage = "Failed to create post. Try again."
-            } finally {
-                isSubmitting = false
-            }
-        }
+    fun onTitleChange(value: String) {
+        uiState = uiState.copy(title = value)
     }
 
-    fun resetState() {
-        submitSuccess = false
-        errorMessage = null
+    fun onDescriptionChange(value: String) {
+        uiState = uiState.copy(description = value)
+    }
+
+    fun onTopicSelect(topic: String) {
+        uiState = uiState.copy(selectedTopic = topic)
+    }
+
+    fun submitPost(communityViewModel: CommunityViewModel) {
+        if (!isPostButtonEnabled) return
+
+        viewModelScope.launch {
+            uiState = uiState.copy(isPosting = true)
+
+            // Simulate API delay
+            delay(1500)
+
+            // ✅ MATCHES YOUR EXISTING CommunityPost MODEL
+            val newPost = CommunityPost(
+                postId = System.currentTimeMillis().toString(),
+                userName = "Jana",
+                userAvatarUrl = "https://i.pravatar.cc/150?img=12",
+                postType = uiState.selectedTopic,
+                postTitle = uiState.title,
+                postContentSnippet = uiState.description,
+                likeCount = 0,
+                commentCount = 0,
+                timestamp = System.currentTimeMillis().toString()
+            )
+
+            communityViewModel.addPost(newPost)
+
+            uiState = uiState.copy(isPosting = false)
+            _events.emit(CreatePostEvent.PostSuccess)
+        }
     }
 }

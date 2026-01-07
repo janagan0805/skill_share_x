@@ -13,6 +13,7 @@ data class MentorData(
     val id: String,
     val name: String,
     val status: String,
+    val phone: String?,
     val imageUrl: String?,
     val rating: Double,
     val rating_count: Int,

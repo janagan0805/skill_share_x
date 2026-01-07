@@ -1,5 +1,9 @@
 package com.example.skillsharex.ui.mentor
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,6 +14,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +32,8 @@ import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.skillsharex.network.AuthApiClient
 import com.example.skillsharex.viewmodel.MentorDetailViewModel
+import androidx.compose.ui.platform.LocalContext
+
 
 /* ---------------- THEME ---------------- */
 
@@ -34,6 +42,7 @@ private val HeaderPurple = Color(0xFF544DCA)
 private val Gradient = Brush.horizontalGradient(
     listOf(Color(0xFF6C47FF), Color(0xFF4BC9FF))
 )
+
 
 /* ---------------- MENTOR DETAIL SCREEN ---------------- */
 
@@ -48,6 +57,30 @@ fun MentorDetailScreen(
     LaunchedEffect(mentorId) {
         viewModel.loadMentorDetail(mentorId)
     }
+
+
+    val context = LocalContext.current
+
+    fun openWhatsAppChat(context: Context, phoneNumber: String) {
+        val url = "https://wa.me/$phoneNumber"
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(url)
+
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "WhatsApp not installed", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun openDialer(context: Context, phoneNumber: String) {
+        val intent = Intent(Intent.ACTION_DIAL).apply {
+            data = Uri.parse("tel:$phoneNumber")
+        }
+        context.startActivity(intent)
+    }
+
+
 
     Scaffold(
         containerColor = Lavender,
@@ -156,6 +189,35 @@ fun MentorDetailScreen(
                         }
 
                         Spacer(Modifier.height(20.dp))
+                    }
+
+                    // chat and call buttons
+
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+
+                            OutlinedButton(
+                                onClick = { openWhatsAppChat(context, "91${mentor.phone}") },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(Icons.Default.Chat, contentDescription = null)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Chat")
+                            }
+
+                            OutlinedButton(onClick = {
+                                openDialer(context, mentor.phone)
+                            },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(Icons.Default.Call, contentDescription = null)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Call")
+                            }
+                        }
                     }
                 }
             }

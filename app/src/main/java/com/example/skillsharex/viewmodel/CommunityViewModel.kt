@@ -51,6 +51,13 @@ class CommunityViewModel : ViewModel() {
         }
     }
 
+    /* ---------- ADD POST (REQUIRED FOR CREATE POST) ---------- */
+
+    fun addPost(post: CommunityPost) {
+        // Optimistic UI update: add new post at top
+        feedPosts = listOf(post) + feedPosts
+    }
+
     /* ---------- OPTIONAL: REFRESH ---------- */
 
     fun refresh() {
@@ -63,7 +70,9 @@ class CommunityViewModel : ViewModel() {
         return if (type.equals("all", ignoreCase = true)) {
             feedPosts
         } else {
-            feedPosts.filter { it.postType.equals(type, ignoreCase = true) }
+            feedPosts.filter {
+                it.postType.equals(type, ignoreCase = true)
+            }
         }
     }
 }
