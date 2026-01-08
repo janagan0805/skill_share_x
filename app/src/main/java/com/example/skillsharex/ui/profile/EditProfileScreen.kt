@@ -65,6 +65,9 @@ fun EditProfileScreen(
     LaunchedEffect(viewModel.profileImagePath.value) {
         selectedImageUri = null
     }
+
+    val imagePath = viewModel.profileImagePath.value
+
     /* ---------------- IMAGE PICKER ---------------- */
     val imagePicker =
         rememberLauncherForActivityResult(
@@ -125,11 +128,15 @@ fun EditProfileScreen(
 
                 Box(modifier = Modifier.size(120.dp)) {
 
+                    val imageUrl = imagePath?.let {
+                        AuthApiClient.IMAGE_BASE_URL + it + "?t=${System.currentTimeMillis()}"
+                    }
+
                     AsyncImage(
-                        model = selectedImageUri ?: AuthApiClient.IMAGE_BASE_URL + viewModel.profileImagePath.value,
+                        model = selectedImageUri ?: imageUrl,
                         contentDescription = null,
                         modifier = Modifier
-                            .size(120.dp)
+                            .size(100.dp)
                             .clip(CircleShape)
                             .background(Color.White),
                         contentScale = ContentScale.Crop
@@ -262,6 +269,10 @@ fun EditProfileScreen(
             Button(
                 onClick = {
                     viewModel.saveProfileChanges(context) {
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("profile_updated", true)
+
                         navController.popBackStack()
                     }
                 },

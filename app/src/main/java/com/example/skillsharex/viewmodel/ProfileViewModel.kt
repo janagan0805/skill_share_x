@@ -76,10 +76,7 @@ class ProfileViewModel : ViewModel() {
 
                 // ✅ RELATIVE PATH ONLY
                 profileImagePath.value = data.profile_image
-
-                // ✅ CACHE LOCALLY
                 data.profile_image?.let {
-                    profileImagePath.value = it
                     sessionManager?.saveProfileImageUrl(it)
                 }
 

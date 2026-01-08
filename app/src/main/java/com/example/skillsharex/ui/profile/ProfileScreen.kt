@@ -30,6 +30,8 @@ import com.example.skillsharex.network.AuthApiClient
 import com.example.skillsharex.utils.SessionManager
 import com.example.skillsharex.viewmodel.ProfileViewModel
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.livedata.observeAsState
+
 
 @Composable
 fun ProfileScreen(
@@ -63,6 +65,20 @@ fun ProfileScreen(
     LaunchedEffect(Unit) {
         viewModel.initSession(context)
         viewModel.fetchProfile()
+    }
+    val refreshTrigger =
+        navController.currentBackStackEntry
+            ?.savedStateHandle
+            ?.getLiveData<Boolean>("profile_updated")
+            ?.observeAsState()
+
+    LaunchedEffect(refreshTrigger?.value) {
+        if (refreshTrigger?.value == true) {
+            viewModel.fetchProfile()
+            navController.currentBackStackEntry
+                ?.savedStateHandle
+                ?.remove<Boolean>("profile_updated")
+        }
     }
 
 
@@ -146,16 +162,22 @@ fun ProfileHeader(
     userName: String,
     onEditClick: () -> Unit
 ) {
-    val imagePath = viewModel.profileImagePath.value
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box {
+            val imagePath = viewModel.profileImagePath.value
+
             if (!imagePath.isNullOrEmpty()) {
+
+                val imageUrl = imagePath?.let {
+                    AuthApiClient.IMAGE_BASE_URL + it + "?t=${System.currentTimeMillis()}"
+                }
+
                 AsyncImage(
-                    model = AuthApiClient.IMAGE_BASE_URL + imagePath,
+                    model = imageUrl,
                     contentDescription = null,
                     modifier = Modifier
                         .size(100.dp)
@@ -163,6 +185,16 @@ fun ProfileHeader(
                         .background(Color.White),
                     contentScale = ContentScale.Crop
                 )
+
+//                AsyncImage(
+//                    model = AuthApiClient.IMAGE_BASE_URL + imagePath,
+//                    contentDescription = null,
+//                    modifier = Modifier
+//                        .size(100.dp)
+//                        .clip(CircleShape)
+//                        .background(Color.White),
+//                    contentScale = ContentScale.Crop
+//                )
             } else {
                 Icon(
                     Icons.Default.Person,

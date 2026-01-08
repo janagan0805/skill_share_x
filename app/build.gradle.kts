@@ -86,6 +86,7 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
+    implementation("androidx.compose.runtime:runtime-livedata:1.6.8")
 
     testImplementation(libs.junit)
         androidTestImplementation(libs.androidx.junit)
