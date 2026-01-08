@@ -1,5 +1,6 @@
 package com.example.skillsharex.ui.session
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -67,6 +68,33 @@ fun SessionOverviewScreen(
         "UPCOMING" -> Color(0xFF425CFF)
         else -> Color.Gray
     }
+
+    fun openWhatsAppChat(context: Context, phoneNumber: String) {
+        val cleanNumber = phoneNumber.replace("+", "").replace(" ", "")
+        val url = "https://wa.me/$cleanNumber"
+
+        try {
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.data = Uri.parse(url)
+            intent.setPackage("com.whatsapp")
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                "WhatsApp is not installed",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    fun openDialer(context: Context, phoneNumber: String) {
+        val intent = Intent(Intent.ACTION_DIAL).apply {
+            data = Uri.parse("tel:$phoneNumber")
+        }
+        context.startActivity(intent)
+    }
+
+
 
     Scaffold(
         containerColor = LavenderBg,
