@@ -2,6 +2,8 @@ package com.example.skillsharex.network
 
 import com.example.skillsharex.data.model.GenericResponse
 import com.example.skillsharex.data.model.Session
+import com.example.skillsharex.data.model.SessionDetailResponse
+import com.example.skillsharex.data.model.SessionListResponse
 import com.example.skillsharex.data.model.UploadImageData
 import com.example.skillsharex.data.models.LoginResponse
 import com.example.skillsharex.data.models.UploadImageResponse
@@ -12,6 +14,7 @@ import retrofit2.http.POST
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.Multipart
 import retrofit2.http.Part
 import retrofit2.http.Query
@@ -83,17 +86,26 @@ interface AuthApi {
     suspend fun getProfile(
         @Query("user_id") userId: Int
     ): Response<ApiResponse<ProfileData>>
-    @GET("get_sessions.php")
-    suspend fun getSessions():
-            Response<ApiResponse<List<Session>>>
 
-    @GET("get_session_detail.php")
+    @GET("api/user/get_user.php")
+    suspend fun getUser(
+        @Query("user_id") userId: Int
+    ): UserResponse
+
+    @POST("api/community/create_post.php")
+    suspend fun createPost(
+        @Body request: CreatePostRequest
+    ): CreatePostResponse
+
+    @GET("api/sessions/get_sessions.php")
+    suspend fun getSessions(): Response<SessionListResponse>
+
+
+
+    @GET("api/sessions/get_session_detail.php")
     suspend fun getSessionDetail(
         @Query("session_id") sessionId: Int
-    ): Response<ApiResponse<Session>>
-
-
-
+    ): Response<SessionDetailResponse>
 }
 
 

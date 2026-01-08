@@ -1,5 +1,6 @@
 package com.example.skillsharex.ui.session
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -22,13 +23,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.skillsharex.viewmodel.SessionViewModel
-import com.example.skillsharex.data.model.Session   // ✅ IMPORTANT
-import com.example.skillsharex.data.model.Mentor    // ✅ IMPORTANT
 
 // SAME THEME COLORS
 private val LavenderBg = Color(0xFFE8E6FF)
 private val HeaderPurple = Color(0xFF544DCA)
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LiveSessionScreen(
@@ -59,7 +59,7 @@ fun LiveSessionScreen(
     }
 
     // ✅ SAFE PHONE ACCESS
-    val mentorPhone = session.mentor.phone ?: ""
+    val mentorPhone = session.mentor?.phone ?: ""
 
     Scaffold(
         containerColor = LavenderBg,
@@ -110,7 +110,7 @@ fun LiveSessionScreen(
                 )
 
                 Text(
-                    text = "Mentor: ${session.mentor.name}",
+                    text = "Mentor: ${session.mentor?.name}",
                     fontSize = 14.sp,
                     color = Color.Gray
                 )

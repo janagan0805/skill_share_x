@@ -162,11 +162,7 @@ fun ProfileHeader(
 
             if (imageUrl != null) {
                 AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(imageUrl)
-                        .diskCacheKey(imageUrl + System.currentTimeMillis())
-                        .memoryCacheKey(imageUrl + System.currentTimeMillis())
-                        .build(),
+                    model = imageUrl,
                     contentDescription = null,
                     modifier = Modifier
                         .size(100.dp)

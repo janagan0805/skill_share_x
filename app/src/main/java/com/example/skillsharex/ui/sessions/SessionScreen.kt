@@ -1,5 +1,6 @@
 package com.example.skillsharex.ui.sessions
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -21,6 +22,7 @@ import androidx.navigation.NavController
 import com.example.skillsharex.viewmodel.SessionViewModel
 import com.example.skillsharex.data.model.Session   // ✅ CORRECT IMPORT
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionScreen(
@@ -131,6 +133,7 @@ fun SessionCard(
         "UPCOMING" -> Color(0xFF425CFF)
         else -> Color.Gray
     }
+    val statusText = session.status?.ifBlank { "scheduled" } ?: "scheduled"
 
     Card(
         modifier = Modifier
@@ -151,7 +154,7 @@ fun SessionCard(
                 Spacer(modifier = Modifier.weight(1f))
 
                 Text(
-                    text = session.status,
+                    text =statusText,
                     color = statusColor,
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp
@@ -161,7 +164,7 @@ fun SessionCard(
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = "Mentor: ${session.mentor.name}",
+                text = "Mentor: ${session.mentor?.name}",
                 fontSize = 13.sp
             )
 

@@ -1,5 +1,7 @@
 package com.example.skillsharex.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
@@ -30,6 +32,7 @@ import com.example.skillsharex.ui.splash.OnboardingScreen
 import com.example.skillsharex.utils.SessionManager
 import com.example.skillsharex.viewmodel.*
 
+@RequiresApi(Build.VERSION_CODES.P)
 @Composable
 fun AppNavHost() {
 
@@ -136,7 +139,6 @@ fun AppNavHost() {
         composable("create_post") {
             CreatePostScreen(
                 navController = navController,
-                communityViewModel = communityViewModel,
                 createPostViewModel = createPostViewModel
             )
         }
@@ -188,12 +190,29 @@ fun AppNavHost() {
             )
         }
 
-        composable("session_overview/{sessionId}") { backStackEntry ->
+        composable(
+            route = "session_overview/{sessionId}",
+            arguments = listOf(
+                navArgument("sessionId") {
+                    type = NavType.IntType
+                }
+            )
+        ) { backStackEntry ->
+            val sessionId = backStackEntry.arguments?.getInt("sessionId")
+
+            // Safety check
+            if (sessionId == null) {
+                // You can pop back or show error UI
+                navController.popBackStack()
+                return@composable
+            }
+
             SessionOverviewScreen(
                 navController = navController,
-                sessionId = backStackEntry.arguments?.getString("sessionId") ?: ""
+                sessionId = sessionId
             )
         }
+
 
         composable("live_session/{sessionId}") { backStackEntry ->
             LiveSessionScreen(

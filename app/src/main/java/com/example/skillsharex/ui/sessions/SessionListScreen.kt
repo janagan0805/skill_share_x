@@ -10,39 +10,37 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.skillsharex.data.model.Session
+import com.example.skillsharex.viewmodel.SessionViewModel
 
-
-// THEME COLORS (same style)
+// Theme colors
 private val LavenderBg = Color(0xFFE8E6FF)
 private val HeaderPurple = Color(0xFF544DCA)
-private val CardWhite = Color(0xFFFFFFFF)
-
-data class SessionItem(
-    val id: String,
-    val title: String,
-    val mentor: String,
-    val status: String
-)
+private val CardWhite = Color.White
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionListScreen(
-    navController: NavController
+    navController: NavController,
+    sessionViewModel: SessionViewModel = viewModel()
 ) {
+    val sessions by sessionViewModel.sessions.collectAsState()
+    val isLoading by sessionViewModel.isLoading.collectAsState()
 
-    val sessions = listOf(
-        SessionItem("1", "Android Development", "Jana", "LIVE"),
-        SessionItem("2", "UI/UX Basics", "Karthick", "UPCOMING"),
-        SessionItem("3", "Photoshop Mastery", "Dhanush", "UPCOMING")
-    )
+
+    // ✅ Load once
+    LaunchedEffect(Unit) {
+        sessionViewModel.loadSessions()
+    }
 
     Scaffold(
         topBar = {
@@ -64,20 +62,49 @@ fun SessionListScreen(
         }
     ) { paddingValues ->
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(LavenderBg)
-                .padding(paddingValues)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        when {
+            isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
 
-            items(sessions) { session ->
-                SessionCard(session) {
-                    navController.navigate(
-                        "session_overview/${session.id}"
-                    )
+            sessions.isEmpty() -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No sessions available")
+                }
+            }
+
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(LavenderBg)
+                        .padding(paddingValues)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(
+                        items = sessions,
+                        key = { it.id } // ✅ stable key
+                    ) { session ->
+                        SessionCard(
+                            session = session,
+                            onClick = {
+                                navController.navigate("session_overview/${session.id}")
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -86,13 +113,14 @@ fun SessionListScreen(
 
 @Composable
 fun SessionCard(
-    session: SessionItem,
+    session: Session,
     onClick: () -> Unit
 ) {
+    val statusText = session.status?.ifBlank { "scheduled" } ?: "scheduled"
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = CardWhite),
         elevation = CardDefaults.cardElevation(6.dp)
@@ -118,17 +146,22 @@ fun SessionCard(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Mentor: ${session.mentor}",
+                    text = "Mentor: ${session.mentor?.name}",
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
             }
 
             Text(
-                text = session.status,
+                text = statusText.uppercase(),
                 fontSize = 12.sp,
-                color = if (session.status == "LIVE") Color.Red else HeaderPurple,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = when (statusText.lowercase()) {
+                    "scheduled" -> HeaderPurple
+                    "completed" -> Color(0xFF2E7D32)
+                    "cancelled" -> Color.Gray
+                    else -> Color.Red
+                }
             )
         }
     }

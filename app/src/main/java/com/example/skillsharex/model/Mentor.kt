@@ -1,8 +1,14 @@
 package com.example.skillsharex.data.model
 
+import com.google.gson.annotations.SerializedName
+
 data class Mentor(
-    val id: Int,
+    @SerializedName("name")
     val name: String,
-    val phone: String,
-    val image: String?
+
+    @SerializedName("phone")
+    val phone: String? = null,
+
+    @SerializedName("image")
+    val image: String? = null
 )

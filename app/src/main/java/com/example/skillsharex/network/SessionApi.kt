@@ -7,11 +7,11 @@ import retrofit2.http.Query
 
 interface SessionApi {
 
-    @GET("get_sessions.php")
-    suspend fun getSessions(): Response<List<Session>>
-
-    @GET("get_session_detail.php")
-    suspend fun getSessionDetail(
-        @Query("session_id") sessionId: Int
-    ): Response<Session>
+//    @GET("get_sessions.php")
+//    suspend fun getSessions(): Response<List<Session>>
+//
+//    @GET("get_session_detail.php")
+//    suspend fun getSessionDetail(
+//        @Query("session_id") sessionId: Int
+//    ): Response<Session>
 }

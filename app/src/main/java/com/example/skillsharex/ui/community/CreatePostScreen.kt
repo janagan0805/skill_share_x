@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.skillsharex.network.AuthApiClient
+import com.example.skillsharex.utils.SessionManager
 import com.example.skillsharex.viewmodel.CommunityViewModel
 import com.example.skillsharex.viewmodel.CreatePostEvent
 import com.example.skillsharex.viewmodel.CreatePostViewModel
@@ -32,44 +34,62 @@ import kotlinx.coroutines.flow.collectLatest
 @Composable
 fun CreatePostScreen(
     navController: NavController,
-    communityViewModel: CommunityViewModel,
     createPostViewModel: CreatePostViewModel = viewModel()
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    val userId = sessionManager.getUserId()
+
     val uiState = createPostViewModel.uiState
     val isPostEnabled = createPostViewModel.isPostButtonEnabled
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    // Listen for events from the ViewModel
-    LaunchedEffect(Unit) {
+    // Load user from DB (REAL DATA)
+    LaunchedEffect(userId) {
+        if (userId > 0) {
+            createPostViewModel.loadUser(userId)
+        } else {
+            snackbarHostState.showSnackbar("User not logged in")
+        }
+    }
+
+    // Listen for events
+    LaunchedEffect(createPostViewModel) {
         createPostViewModel.events.collectLatest { event ->
             when (event) {
                 is CreatePostEvent.PostSuccess -> {
-                    // Navigate back to the community feed on success
                     navController.popBackStack()
                 }
                 is CreatePostEvent.PostError -> {
-                    // TODO: Show a snackbar or toast with the error message
+                    snackbarHostState.showSnackbar(
+                        event.message.ifBlank { "Failed to create post" }
+                    )
                 }
             }
         }
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Create Post") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
                     }
                 },
                 actions = {
                     TextButton(
-                        onClick = { createPostViewModel.submitPost(communityViewModel) },
-                        enabled = isPostEnabled && !uiState.isPosting
+                        enabled = isPostEnabled && !uiState.isPosting,
+                        onClick = { createPostViewModel.submitPost() }
                     ) {
                         if (uiState.isPosting) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
+                                modifier = Modifier.size(20.dp),
                                 strokeWidth = 2.dp
                             )
                         } else {
@@ -80,19 +100,34 @@ fun CreatePostScreen(
             )
         }
     ) { padding ->
+
+        // If user is still loading
+        if (uiState.user == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+            return@Scaffold
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState()) // Make the screen scrollable
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // In a real app, user data would come from a user repository or session manager
+
+            // REAL USER FROM DATABASE
             UserHeader(
-                userName = "John Appleseed", // Replace with actual user data
-                userRole = "Mentor",          // Replace with actual user data
-                avatarUrl = "https://i.pravatar.cc/150?u=a042581f4e29026704d" // Replace with actual user data
+                userName = uiState.user.name,
+                userRole = uiState.user.role,
+                avatarUrl = uiState.user.avatar_url ?: ""
             )
 
             TopicSelector(
@@ -108,17 +143,17 @@ fun CreatePostScreen(
             )
 
             PostActionBar()
-
         }
     }
 }
+
 
 
 @Composable
 fun UserHeader(userName: String, userRole: String, avatarUrl: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         AsyncImage(
-            model = avatarUrl,
+            model = AuthApiClient.IMAGE_BASE_URL + avatarUrl,
             contentDescription = "User Avatar",
             modifier = Modifier
                 .size(50.dp)

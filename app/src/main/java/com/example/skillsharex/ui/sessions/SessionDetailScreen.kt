@@ -1,5 +1,6 @@
 package com.example.skillsharex.ui.sessions
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -17,6 +18,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.skillsharex.viewmodel.SessionViewModel
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionDetailScreen(
@@ -82,6 +84,7 @@ fun SessionDetailScreen(
         ) {
 
             /* -------- SESSION INFO -------- */
+            val statusText = session.status?.ifBlank { "scheduled" } ?: "scheduled"
 
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -99,7 +102,7 @@ fun SessionDetailScreen(
                     Spacer(Modifier.height(6.dp))
 
                     Text(
-                        text = "Mentor: ${session.mentor.name}",
+                        text = "Mentor: ${session.mentor?.name}",
                         fontSize = 14.sp,
                         color = Color.DarkGray
                     )
@@ -115,7 +118,7 @@ fun SessionDetailScreen(
                     Spacer(Modifier.height(10.dp))
 
                     Text(
-                        text = session.status,
+                        text = statusText,
                         color = statusColor,
                         fontWeight = FontWeight.Bold
                     )

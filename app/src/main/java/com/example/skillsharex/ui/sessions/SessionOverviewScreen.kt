@@ -24,30 +24,63 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.skillsharex.viewmodel.SessionViewModel
 
-// THEME COLORS
+// Theme colors
 private val LavenderBg = Color(0xFFE8E6FF)
 private val HeaderPurple = Color(0xFF544DCA)
+
+/* -------------------- Helper functions -------------------- */
+
+fun openWhatsApp(context: Context, phoneNumber: String?) {
+    if (phoneNumber.isNullOrBlank()) {
+        Toast.makeText(context, "Phone number not available", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val cleanNumber = phoneNumber.replace("+", "").replace(" ", "")
+    val intent = Intent(
+        Intent.ACTION_VIEW,
+        Uri.parse("https://wa.me/$cleanNumber")
+    )
+
+    try {
+        context.startActivity(intent)
+    } catch (e: Exception) {
+        Toast.makeText(context, "WhatsApp not installed", Toast.LENGTH_SHORT).show()
+    }
+}
+
+fun openDialer(context: Context, phoneNumber: String?) {
+    if (phoneNumber.isNullOrBlank()) {
+        Toast.makeText(context, "Phone number not available", Toast.LENGTH_SHORT).show()
+        return
+    }
+
+    val intent = Intent(Intent.ACTION_DIAL).apply {
+        data = Uri.parse("tel:$phoneNumber")
+    }
+    context.startActivity(intent)
+}
+
+/* -------------------- Screen -------------------- */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionOverviewScreen(
     navController: NavController,
-    sessionId: String
+    sessionId: Int,
+    sessionViewModel: SessionViewModel = viewModel()
 ) {
-
     val context = LocalContext.current
 
-    // ✅ SINGLE ViewModel instance
-    val sessionViewModel: SessionViewModel = viewModel()
+    val session by sessionViewModel.selectedSession.collectAsState()
+    val isLoading by sessionViewModel.isLoading.collectAsState()
 
+    // Load session detail once
     LaunchedEffect(sessionId) {
-        sessionViewModel.loadSessionDetail(sessionId.toInt())
+        sessionViewModel.loadSessionDetail(sessionId)
     }
 
-    val session = sessionViewModel.selectedSession.value
-
-    // ✅ LOADING STATE
-    if (session == null) {
+    if (isLoading || session == null) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -57,44 +90,17 @@ fun SessionOverviewScreen(
         return
     }
 
-    // ✅ SAFE mentor access
-    val mentor = session.mentor
-    val mentorPhone = mentor?.phone ?: ""
+    val mentor = session!!.mentor
 
-    val status = session.status ?: "UNKNOWN"
+    // Normalize backend status (your backend sends empty string)
+    val status = session!!.status?.ifBlank { "scheduled" } ?: "scheduled"
 
-    val statusColor = when (status) {
-        "LIVE" -> Color.Red
-        "UPCOMING" -> Color(0xFF425CFF)
-        else -> Color.Gray
+    val statusColor = when (status.lowercase()) {
+        "scheduled" -> Color(0xFF425CFF)
+        "completed" -> Color(0xFF2E7D32)
+        "cancelled" -> Color.Gray
+        else -> Color.Red
     }
-
-    fun openWhatsAppChat(context: Context, phoneNumber: String) {
-        val cleanNumber = phoneNumber.replace("+", "").replace(" ", "")
-        val url = "https://wa.me/$cleanNumber"
-
-        try {
-            val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse(url)
-            intent.setPackage("com.whatsapp")
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(
-                context,
-                "WhatsApp is not installed",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
-    fun openDialer(context: Context, phoneNumber: String) {
-        val intent = Intent(Intent.ACTION_DIAL).apply {
-            data = Uri.parse("tel:$phoneNumber")
-        }
-        context.startActivity(intent)
-    }
-
-
 
     Scaffold(
         containerColor = LavenderBg,
@@ -125,7 +131,7 @@ fun SessionOverviewScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            /* -------- SESSION HEADER -------- */
+            /* ---------- SESSION HEADER ---------- */
 
             Card(
                 shape = RoundedCornerShape(18.dp),
@@ -134,7 +140,7 @@ fun SessionOverviewScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
 
                     Text(
-                        text = session.title ?: "",
+                        text = session!!.title,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -143,7 +149,7 @@ fun SessionOverviewScreen(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = "Mentor: ${mentor?.name ?: "Not assigned"}",
+                        text = "Mentor: ${mentor?.name ?: "Not available"}",
                         fontSize = 14.sp,
                         color = Color.White.copy(alpha = 0.9f)
                     )
@@ -151,7 +157,7 @@ fun SessionOverviewScreen(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "● $status",
+                        text = "● ${status.uppercase()}",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = statusColor
@@ -159,7 +165,7 @@ fun SessionOverviewScreen(
                 }
             }
 
-            /* -------- DESCRIPTION -------- */
+            /* ---------- DETAILS ---------- */
 
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -168,7 +174,7 @@ fun SessionOverviewScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
 
                     Text(
-                        text = "Session Description",
+                        text = "Session Details",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
@@ -176,51 +182,44 @@ fun SessionOverviewScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = session.description
-                            ?: "This session will be handled by the mentor.",
+                        text = session!!.description ?: "Session conducted by mentor.",
                         fontSize = 14.sp,
                         color = Color.Gray
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Text(text = "Date: ${session.date ?: "N/A"}")
-                    Text(
-                        text = "Time: ${(session.start_time ?: "--")} - ${(session.end_time ?: "--")}"
-                    )
+                    Text(text = "Date: ${session!!.date}")
+                    Text(text = "Time: ${session!!.start_time} - ${session!!.end_time}")
                 }
             }
 
-            /* -------- JOIN SESSION -------- */
+            /* ---------- JOIN BUTTON ---------- */
 
             Button(
                 onClick = {
-                    navController.navigate("live_session/${session.id}")
+                    navController.navigate("live_session/${session!!.id}")
                 },
-                enabled = status != "COMPLETED",
+                enabled = status != "completed",
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(Icons.Default.PlayArrow, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    when (status) {
-                        "LIVE" -> "Join Session"
-                        "UPCOMING" -> "View Session"
-                        else -> "Completed"
-                    }
+                    if (status == "scheduled") "Join Session" else "Completed"
                 )
             }
-            /* -------- CHAT / CALL -------- */
+
+            /* ---------- CHAT / CALL ---------- */
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
 
-                // ✅ WHATSAPP CHAT
                 OutlinedButton(
-                    onClick = { openWhatsAppChat(context, "91${mentor.phone}") },
+                    onClick = { openWhatsApp(context, mentor?.phone) },
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.Chat, contentDescription = null)
@@ -228,17 +227,14 @@ fun SessionOverviewScreen(
                     Text("Chat")
                 }
 
-                // ✅ PHONE DIALER
-                OutlinedButton(onClick = {
-                    openDialer(context, mentor.phone)
-                },
+                OutlinedButton(
+                    onClick = { openDialer(context, mentor?.phone) },
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.Call, contentDescription = null)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Call")
                 }
-
             }
         }
     }
