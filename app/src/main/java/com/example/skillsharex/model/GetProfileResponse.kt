@@ -8,7 +8,14 @@ data class GetProfileResponse(
 data class ProfileData(
     val name: String,
     val role: String,
-    val bio: String,
     val profile_image: String,
     val skills: List<String>
 )
+
+data class UpdateProfileRequest(
+    val user_id: Int,
+    val full_name: String,
+    val role: String,
+    val skills: List<String>
+)
+

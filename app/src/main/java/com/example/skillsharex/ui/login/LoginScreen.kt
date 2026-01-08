@@ -132,7 +132,7 @@ fun LoginScreen(
                                 sessionManager.setLoggedIn(true)
                                 sessionManager.saveUserId(user.id)            // 🔑 THIS FIXES EVERYTHING
                                 sessionManager.saveUserName(user.full_name)
-                                sessionManager.saveProfileImageUri(user.profil_image)
+                                sessionManager.saveProfileImageUrl(user.profil_image)
 
                                 onLoginSuccess(user.full_name)
                             }

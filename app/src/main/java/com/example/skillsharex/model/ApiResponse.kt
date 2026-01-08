@@ -5,3 +5,8 @@ data class ApiResponse<T>(
     val message: String,
     val data: T?
 )
+
+data class BasicApiResponse(
+    val status: String,
+    val message: String
+)

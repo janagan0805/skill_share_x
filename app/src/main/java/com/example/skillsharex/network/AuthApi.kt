@@ -1,12 +1,9 @@
 package com.example.skillsharex.network
 
-import com.example.skillsharex.data.model.GenericResponse
-import com.example.skillsharex.data.model.Session
 import com.example.skillsharex.data.model.SessionDetailResponse
 import com.example.skillsharex.data.model.SessionListResponse
 import com.example.skillsharex.data.model.UploadImageData
 import com.example.skillsharex.data.models.LoginResponse
-import com.example.skillsharex.data.models.UploadImageResponse
 import com.example.skillsharex.model.*
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -19,7 +16,6 @@ import retrofit2.http.Multipart
 import retrofit2.http.Part
 import retrofit2.http.Query
 import retrofit2.http.GET
-import retrofit2.http.Path
 
 interface AuthApi {
 
@@ -86,6 +82,12 @@ interface AuthApi {
     suspend fun getProfile(
         @Query("user_id") userId: Int
     ): Response<ApiResponse<ProfileData>>
+
+
+    @POST("api/profile/update_profile.php")
+    suspend fun updateProfile(
+        @Body request: UpdateProfileRequest
+    ): BasicApiResponse
 
     @GET("api/user/get_user.php")
     suspend fun getUser(

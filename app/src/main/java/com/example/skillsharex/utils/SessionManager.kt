@@ -38,6 +38,16 @@ class SessionManager(context: Context) {
         return prefs.getString(KEY_USER_NAME, "User") ?: "User"
     }
 
+    /* ----------------skills -------------------*/
+    fun saveSkills(skills: String) {
+        prefs.edit().putString("user_skills", skills).apply()
+    }
+
+    fun getSkills(): String? {
+        return prefs.getString("user_skills", null)
+    }
+
+
     /* ---------- ONBOARDING ---------- */
 
     fun isFirstLaunch(): Boolean {
@@ -47,13 +57,14 @@ class SessionManager(context: Context) {
     fun setFirstLaunchDone() {
         prefs.edit().putBoolean(KEY_FIRST_LAUNCH, false).apply()
     }
-    fun saveProfileImageUri(uri: String?) {
-        prefs.edit().putString("profile_image", uri ?: "").apply()
+    fun saveProfileImageUrl(url: String?) {
+        prefs.edit().putString("profile_image_url", url).apply()
     }
 
-    fun getProfileImageUri(): String? {
-        return prefs.getString("profile_image_uri", null)
+    fun getProfileImageUrl(): String? {
+        return prefs.getString("profile_image_url", null)
     }
+
     fun saveUserId(userId: Int) {
         prefs.edit().putInt("user_id", userId).apply()
     }
@@ -61,13 +72,8 @@ class SessionManager(context: Context) {
         return prefs.getInt("user_id", 0)
     }
 
-    fun saveProfileImageUrl(url: String) {
-        prefs.edit().putString("profile_image_url", url).apply()
-    }
 
-    fun getProfileImageUrl(): String? {
-        return prefs.getString("profile_image_url", null)
-    }
+
 
 
 

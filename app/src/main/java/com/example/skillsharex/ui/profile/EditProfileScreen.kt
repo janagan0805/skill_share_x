@@ -31,6 +31,8 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.layout.ContentScale
+import com.example.skillsharex.network.AuthApiClient
+import com.example.skillsharex.utils.SessionManager
 import com.example.skillsharex.viewmodel.ProfileViewModel
 
 /* ---------------- THEME COLORS ---------------- */
@@ -47,6 +49,7 @@ fun EditProfileScreen(
 ) {
 
     val context = LocalContext.current
+    val sessionManager = SessionManager(context)
 
     // 🔑 Initialize session for ViewModel (IMPORTANT)
     LaunchedEffect(Unit) {
@@ -59,7 +62,7 @@ fun EditProfileScreen(
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
-    LaunchedEffect(viewModel.profileImageUrl.value) {
+    LaunchedEffect(viewModel.profileImagePath.value) {
         selectedImageUri = null
     }
     /* ---------------- IMAGE PICKER ---------------- */
@@ -123,7 +126,7 @@ fun EditProfileScreen(
                 Box(modifier = Modifier.size(120.dp)) {
 
                     AsyncImage(
-                        model = selectedImageUri ?: viewModel.profileImageUrl.value,
+                        model = selectedImageUri ?: AuthApiClient.IMAGE_BASE_URL + viewModel.profileImagePath.value,
                         contentDescription = null,
                         modifier = Modifier
                             .size(120.dp)
@@ -191,22 +194,17 @@ fun EditProfileScreen(
                 Text("Role / Position", fontWeight = FontWeight.SemiBold, color = PrimaryBlue)
                 OutlinedTextField(
                     value = viewModel.role.value,
-                    onValueChange = { viewModel.role.value = it },
+                    onValueChange = {},
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp)
+                    enabled = false,
+                    readOnly = true,
+                    shape = RoundedCornerShape(14.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        disabledTextColor = Color.DarkGray,
+                        disabledBorderColor = Color.LightGray
+                    )
                 )
 
-                Spacer(Modifier.height(16.dp))
-
-                Text("Bio / About", fontWeight = FontWeight.SemiBold, color = PrimaryBlue)
-                OutlinedTextField(
-                    value = viewModel.bio.value,
-                    onValueChange = { viewModel.bio.value = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(110.dp),
-                    shape = RoundedCornerShape(14.dp)
-                )
 
                 Spacer(Modifier.height(20.dp))
 
@@ -262,7 +260,12 @@ fun EditProfileScreen(
 
             /* ---------------- SAVE BUTTON ---------------- */
             Button(
-                onClick = { navController.popBackStack() },
+                onClick = {
+                    viewModel.saveProfileChanges(context) {
+                        navController.popBackStack()
+                    }
+                },
+                enabled = !viewModel.isLoading.value,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
@@ -270,8 +273,14 @@ fun EditProfileScreen(
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(PrimaryBlue)
             ) {
-                Text("Save Changes", color = Color.White, fontSize = 18.sp)
+                Text(
+                    if (viewModel.isLoading.value) "Saving..."
+                    else "Save Changes",
+                    color = Color.White,
+                    fontSize = 18.sp
+                )
             }
+
         }
     }
 }

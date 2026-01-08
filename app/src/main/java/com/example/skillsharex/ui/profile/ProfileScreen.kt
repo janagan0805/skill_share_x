@@ -41,12 +41,6 @@ fun ProfileScreen(
     val session = SessionManager(context)
     val scope = rememberCoroutineScope()
 
-    /* 🔑 INIT VIEWMODEL + FETCH PROFILE */
-    LaunchedEffect(Unit) {
-        viewModel.initSession(context)
-        viewModel.fetchProfile()
-    }
-
 
     val tabs = listOf("Profile", "Sessions", "Reviews")
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -65,7 +59,9 @@ fun ProfileScreen(
         }
     }
 
-    LaunchedEffect(viewModel.profileImageUrl.value) {
+    /* 🔑 INIT VIEWMODEL + FETCH PROFILE */
+    LaunchedEffect(Unit) {
+        viewModel.initSession(context)
         viewModel.fetchProfile()
     }
 
@@ -150,19 +146,16 @@ fun ProfileHeader(
     userName: String,
     onEditClick: () -> Unit
 ) {
+    val imagePath = viewModel.profileImagePath.value
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         Box {
-
-            val imageUrl = viewModel.profileImageUrl.value
-
-            if (imageUrl != null) {
+            if (!imagePath.isNullOrEmpty()) {
                 AsyncImage(
-                    model = imageUrl,
+                    model = AuthApiClient.IMAGE_BASE_URL + imagePath,
                     contentDescription = null,
                     modifier = Modifier
                         .size(100.dp)
@@ -170,8 +163,6 @@ fun ProfileHeader(
                         .background(Color.White),
                     contentScale = ContentScale.Crop
                 )
-
-
             } else {
                 Icon(
                     Icons.Default.Person,
@@ -199,11 +190,11 @@ fun ProfileHeader(
         }
 
         Spacer(Modifier.height(10.dp))
-
         Text(userName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         Text(viewModel.role.value, fontSize = 14.sp, color = Color.DarkGray)
     }
 }
+
 
 /* ---------------- PROFILE TAB ---------------- */
 
