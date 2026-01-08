@@ -6,7 +6,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object ApiClient {
 
     private const val BASE_URL =
-        "http://192.168.43.111/skillsharex_backend/api/sessions/"
+        "http://10.119.69.111/skillsharex_backend/api/sessions/"
 
     val sessionApi: SessionApi by lazy {
         Retrofit.Builder()

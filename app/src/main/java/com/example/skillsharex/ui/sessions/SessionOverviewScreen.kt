@@ -2,6 +2,7 @@ package com.example.skillsharex.ui.session
 
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -182,7 +183,6 @@ fun SessionOverviewScreen(
                     }
                 )
             }
-
             /* -------- CHAT / CALL -------- */
 
             Row(
@@ -190,16 +190,9 @@ fun SessionOverviewScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
 
+                // ✅ WHATSAPP CHAT
                 OutlinedButton(
-                    onClick = {
-                        if (mentorPhone.isNotEmpty()) {
-                            val intent = Intent(
-                                Intent.ACTION_VIEW,
-                                Uri.parse("https://wa.me/$mentorPhone")
-                            )
-                            context.startActivity(intent)
-                        }
-                    },
+                    onClick = { openWhatsAppChat(context, "91${mentor.phone}") },
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.Chat, contentDescription = null)
@@ -207,22 +200,17 @@ fun SessionOverviewScreen(
                     Text("Chat")
                 }
 
-                OutlinedButton(
-                    onClick = {
-                        if (mentorPhone.isNotEmpty()) {
-                            val intent = Intent(
-                                Intent.ACTION_DIAL,
-                                Uri.parse("tel:$mentorPhone")
-                            )
-                            context.startActivity(intent)
-                        }
-                    },
+                // ✅ PHONE DIALER
+                OutlinedButton(onClick = {
+                    openDialer(context, mentor.phone)
+                },
                     modifier = Modifier.weight(1f)
                 ) {
                     Icon(Icons.Default.Call, contentDescription = null)
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Call")
                 }
+
             }
         }
     }
