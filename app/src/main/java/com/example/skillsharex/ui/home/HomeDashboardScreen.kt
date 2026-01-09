@@ -1,6 +1,5 @@
 package com.example.skillsharex.ui.home
 
-import android.util.Log
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -20,21 +19,23 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -46,8 +47,6 @@ import com.example.skillsharex.navigation.safeNavigate
 import com.example.skillsharex.network.AuthApiClient
 import com.example.skillsharex.utils.SessionManager
 import com.example.skillsharex.viewmodel.DashboardViewModel
-
-/* ---------------- HOME DASHBOARD ---------------- */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,51 +60,34 @@ fun HomeDashboardScreen(
     val userName = session.getUserName()
 
     val categories = listOf("UI/UX", "Android", "Java", "Photoshop", "Design", "Career")
-    val scrollState = rememberScrollState()
 
-    LaunchedEffect(Unit) {
-        viewModel.loadDashboardData()
+    /* ---------- RELOAD ON RESUME ---------- */
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.loadDashboardData()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
+
+    /* ---------- SWIPE REFRESH STATE ---------- */
+    val swipeState = rememberSwipeRefreshState(
+        isRefreshing = viewModel.isLoading
+    )
 
     Scaffold(
         floatingActionButton = {
-
-            val interactionSource = remember { MutableInteractionSource() }
-            val isPressed by interactionSource.collectIsPressedAsState()
-
-            val scale by animateFloatAsState(
-                targetValue = if (isPressed) 0.92f else 1f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessLow
-                ),
-                label = "fab-scale"
-            )
-
             FloatingActionButton(
                 onClick = { navController.navigate("chatbot") },
-                containerColor = if (isPressed) Color(0xFFEAB308) else Color(0xFFFACC15),
-                interactionSource = interactionSource,
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 12.dp,
-                    pressedElevation = 16.dp
-                ),
-                shape = RoundedCornerShape(50),
-                modifier = Modifier
-                    .scale(scale)
-                    .height(60.dp)
-                    .width(60.dp)
+                containerColor = Color(0xFFFACC15),
+                shape = RoundedCornerShape(50)
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.SmartToy,
-                    contentDescription = "AI Assistant",
-                    tint = Color(0xFF111827),
-                    modifier = Modifier.size(28.dp)
-                )
+                Icon(Icons.Outlined.SmartToy, null)
             }
-        }
-
-        ,
+        },
         bottomBar = {
             BottomBar(
                 navController = navController,
@@ -115,102 +97,74 @@ fun HomeDashboardScreen(
                 onOpenCommunity = { navController.safeNavigate("community") }
             )
         }
-    )
-    { innerPadding ->
+    ) { padding ->
 
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-                .verticalScroll(scrollState)
+        SwipeRefresh(
+            state = swipeState,
+            onRefresh = { viewModel.loadDashboardData() },
+            modifier = Modifier.padding(padding)
         ) {
 
-            /* -------- HEADER -------- */
-
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF544DCA)),
-                shape = RoundedCornerShape(bottomStart = 25.dp, bottomEnd = 25.dp),
-                modifier = Modifier.fillMaxWidth()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
             ) {
-                Column(modifier = Modifier.padding(20.dp)) {
 
-                    Text(
-                        text = "Welcome ${userName ?: "User"} 👋",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.White, RoundedCornerShape(50.dp))
-                            .padding(horizontal = 16.dp, vertical = 12.dp)
-                    ) {
-                        Icon(Icons.Default.Search, null, tint = Color(0xFF425CFF))
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text("Search skills or mentors", color = Color.Gray)
-                        Spacer(modifier = Modifier.weight(1f))
-                        Icon(
-                            Icons.Default.Notifications,
-                            contentDescription = null,
-                            tint = Color(0xFF425CFF),
-                            modifier = Modifier.clickable {
-                                navController.navigate("notifications")
-                            }
+                /* ---------- HEADER ---------- */
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF544DCA)),
+                    shape = RoundedCornerShape(bottomStart = 25.dp, bottomEnd = 25.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(20.dp)) {
+                        Text(
+                            text = "Welcome ${userName ?: "User"} 👋",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(Modifier.height(16.dp))
 
-            /* -------- CATEGORY CHIPS -------- */
-
-            LazyRow(modifier = Modifier.padding(start = 12.dp)) {
-                items(categories) { item ->
-                    AssistChip(
-                        onClick = { },
-                        label = { Text(item, fontWeight = FontWeight.SemiBold) },
-                        modifier = Modifier.padding(end = 10.dp),
-                        shape = RoundedCornerShape(30.dp)
-                    )
+                LazyRow(Modifier.padding(start = 12.dp)) {
+                    items(categories) {
+                        AssistChip(
+                            onClick = {},
+                            label = { Text(it) },
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                    }
                 }
-            }
 
-            /* -------- ACTIVE SESSION -------- */
+                ActiveSessionCard(navController)
 
-            ActiveSessionCard(navController)
-
-            /* -------- SECTIONS -------- */
-
-            DashboardSection(
-                title = "Courses Available Now",
-                items = viewModel.courses,
-                itemContent = { course ->
-                    CourseCard(course = course) {
+                DashboardSection(
+                    title = "Courses Available Now",
+                    items = viewModel.courses
+                ) { course ->
+                    CourseCard(course) {
                         navController.navigate("courseDetail/${course.id}")
                     }
                 }
-            )
 
-            DashboardSection(
-                title = "Top Mentors For You",
-                items = viewModel.mentors,
-                itemContent = { mentor ->
-                    MentorCard(mentor = mentor) {
+                DashboardSection(
+                    title = "Top Mentors For You",
+                    items = viewModel.mentors
+                ) { mentor ->
+                    MentorCard(mentor) {
                         navController.navigate("mentorDetail/${mentor.id}")
                     }
                 }
-            )
 
-            Spacer(modifier = Modifier.height(80.dp))
+                Spacer(Modifier.height(80.dp))
+            }
         }
     }
 }
+
 
 /* ---------------- ACTIVE SESSION CARD ---------------- */
 
@@ -303,19 +257,32 @@ fun MentorCard(
     ) {
         Column {
 
+//            AsyncImage(
+//                model = ImageRequest.Builder(LocalContext.current)
+//                    .data(mentor.imageUrl?.let { AuthApiClient.IMAGE_BASE_URL + it })
+//                    .crossfade(true)
+//                    .build(),
+//                placeholder = painterResource(id = R.drawable.profile),
+//                error = painterResource(id = R.drawable.profile),
+//                contentDescription = mentor.name,
+//                contentScale = ContentScale.Crop,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(110.dp)
+//            )
+            val url = AuthApiClient.IMAGE_BASE_URL + mentor.imageUrl
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(mentor.imageUrl?.let { AuthApiClient.IMAGE_BASE_URL + it })
-                    .crossfade(true)
+                    .data(url)
+                    .setParameter("time", System.currentTimeMillis()) // bust cache
                     .build(),
-                placeholder = painterResource(id = R.drawable.profile),
-                error = painterResource(id = R.drawable.profile),
                 contentDescription = mentor.name,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(110.dp)
             )
+
 
             Column(modifier = Modifier.padding(10.dp)) {
 

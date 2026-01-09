@@ -87,6 +87,8 @@ dependencies {
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2")
     implementation("androidx.compose.runtime:runtime-livedata:1.6.8")
+    implementation(libs.accompanist.swiperefresh)
+
 
     testImplementation(libs.junit)
         androidTestImplementation(libs.androidx.junit)
