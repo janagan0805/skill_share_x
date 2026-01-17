@@ -24,7 +24,7 @@ class CourseDetailViewModel : ViewModel() {
     /**
      * Fetch course detail from backend using course_id
      */
-    fun loadCourseDetail(courseId: String) {
+    fun loadCourseDetail(courseId: Int) {
         viewModelScope.launch {
             isLoading = true
             errorMessage = null

@@ -19,8 +19,11 @@ import com.example.skillsharex.ui.home.HomeDashboardScreen
 import com.example.skillsharex.ui.login.LoginScreen
 import com.example.skillsharex.ui.mentor.*
 import com.example.skillsharex.ui.notifications.NotificationsScreen
+import com.example.skillsharex.ui.profile.CreateCourseScreen
+import com.example.skillsharex.ui.profile.EditCourseDetailScreen
 import com.example.skillsharex.ui.profile.EditProfileScreen
 import com.example.skillsharex.ui.profile.ProfileScreen
+import com.example.skillsharex.ui.profile.UserCourseScreen
 import com.example.skillsharex.ui.requests.MentorshipRequestsScreen
 import com.example.skillsharex.ui.session.*
 import com.example.skillsharex.ui.sessions.SessionDetailScreen
@@ -168,6 +171,23 @@ fun AppNavHost() {
             )
         }
 
+        composable(Screen.UserCourse.route) {
+            UserCourseScreen(navController)
+        }
+
+        composable(
+            route = "edit_course/{courseId}",
+            arguments = listOf(navArgument("courseId") { type = NavType.IntType })
+        ) {
+            EditCourseDetailScreen(navController = navController)
+        }
+
+
+        composable("create_course") {
+            CreateCourseScreen(navController)
+        }
+
+
         composable("settings") {
             SettingsScreen(navController)
         }
@@ -231,10 +251,9 @@ fun AppNavHost() {
             }
         }
 
-        composable("courseDetail/{courseId}") { backStackEntry ->
-            backStackEntry.arguments?.getString("courseId")?.let {
-                CourseDetailScreen(navController, it)
-            }
+        composable("courseDetail/{courseId}",
+            listOf(navArgument("courseId") { type = NavType.IntType })) {
+                CourseDetailScreen(navController = navController)
         }
 
         composable(Screen.SkillFilter.route) {

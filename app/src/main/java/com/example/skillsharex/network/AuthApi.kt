@@ -67,8 +67,19 @@ interface AuthApi {
 
     @GET("api/course/get_course_detail.php")
     suspend fun getCourseDetail(
-        @Query("course_id") courseId: String
+        @Query("course_id") courseId: Int
     ): CourseDetailResponse
+
+    @FormUrlEncoded
+    @POST("api/course/update_course.php")
+    suspend fun updateCourse(
+        @Field("course_id") courseId: Int,
+        @Field("user_id") userId: Int?,
+        @Field("title") title: String,
+        @Field("description") description: String,
+        @Field("status") status: String
+    ): BasicResponse
+
 
     @Multipart
     @POST("api/profile/upload_profile_image.php")
@@ -77,6 +88,10 @@ interface AuthApi {
         @Part("user_id") userId: RequestBody
     ): Response<ApiResponse<UploadImageData>>
 
+    @GET("api/profile/get_my_courses.php")
+    suspend fun getMyCourses(
+        @Query("user_id") userId: Any
+    ): CourseListResponse
 
     @GET("api/profile/get_profile.php")
     suspend fun getProfile(
@@ -88,6 +103,19 @@ interface AuthApi {
     suspend fun updateProfile(
         @Body request: UpdateProfileRequest
     ): BasicApiResponse
+
+    @Multipart
+    @POST("api/course/create_course.php")
+    suspend fun createCourse(
+        @Part("user_id") userId: okhttp3.RequestBody,
+        @Part("title") title: okhttp3.RequestBody,
+        @Part("description") description: okhttp3.RequestBody,
+        @Part("status") status: okhttp3.RequestBody,
+        @Part image: MultipartBody.Part
+    ): BasicResponse
+
+
+
 
     @GET("api/user/get_user.php")
     suspend fun getUser(

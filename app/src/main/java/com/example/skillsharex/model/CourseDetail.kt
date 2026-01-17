@@ -16,6 +16,7 @@ data class CourseDetailData(
     val cover_image: String?,
     val rating: Double,
     val rating_count: Int,
+    val status: String,
     val mentor: MentorDetail
 )
 

@@ -1,4 +1,5 @@
 package com.example.skillsharex.model
+import com.google.gson.annotations.SerializedName
 
 data class GetProfileResponse(
     val success: Boolean,
@@ -18,4 +19,18 @@ data class UpdateProfileRequest(
     val role: String,
     val skills: List<String>
 )
+
+
+data class CourseListResponse(
+
+    @SerializedName("success")
+    val success: Boolean,
+
+    @SerializedName("data")
+    val data: List<CourseData>? = emptyList(),
+
+    @SerializedName("message")
+    val message: String? = null
+)
+
 

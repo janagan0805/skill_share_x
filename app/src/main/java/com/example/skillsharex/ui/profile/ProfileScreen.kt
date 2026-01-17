@@ -127,6 +127,9 @@ fun ProfileScreen(
                 onEditProfile = {
                     navController.navigate(Screen.EditProfile.route)
                 },
+                onUserCourse = {
+                    navController.navigate(Screen.UserCourse.route) // 👈 NEW
+                },
                 onOpenSettings = {
                     navController.navigate(Screen.Settings.route)
                 },
@@ -229,10 +232,10 @@ fun ProfileHeader(
 
 
 /* ---------------- PROFILE TAB ---------------- */
-
 @Composable
 fun ProfileTabContent(
     onEditProfile: () -> Unit,
+    onUserCourse: () -> Unit,
     onOpenSettings: () -> Unit,
     onLogout: () -> Unit,
     courses: List<Course>
@@ -240,13 +243,12 @@ fun ProfileTabContent(
     Column(Modifier.padding(16.dp)) {
 
         ProfileOption("Edit Profile", onEditProfile)
+        ProfileOption("My Course", onUserCourse) // 👈 NEW
         ProfileOption("Help & Support")
         ProfileOption("Settings", onOpenSettings)
 
         if (courses.isNotEmpty()) {
-
             Spacer(Modifier.height(16.dp))
-
             Text("Courses I Teach", fontWeight = FontWeight.Bold)
 
             LazyColumn {
@@ -267,6 +269,7 @@ fun ProfileTabContent(
         }
     }
 }
+
 
 /* ---------------- OTHER UI (UNCHANGED) ---------------- */
 

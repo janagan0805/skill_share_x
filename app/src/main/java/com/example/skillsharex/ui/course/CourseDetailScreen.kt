@@ -26,9 +26,13 @@ import com.example.skillsharex.viewmodel.CourseDetailViewModel
 @Composable
 fun CourseDetailScreen(
     navController: NavController,
-    courseId: String,
     viewModel: CourseDetailViewModel = viewModel()
 ) {
+
+    val courseId =
+        navController.currentBackStackEntry
+            ?.arguments
+            ?.getInt("courseId") ?: return
 
     LaunchedEffect(courseId) {
         viewModel.loadCourseDetail(courseId)
