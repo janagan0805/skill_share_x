@@ -3,7 +3,7 @@ package com.example.skillsharex.network
 import com.example.skillsharex.data.model.SessionDetailResponse
 import com.example.skillsharex.data.model.SessionListResponse
 import com.example.skillsharex.data.model.UploadImageData
-import com.example.skillsharex.data.models.LoginResponse
+import com.example.skillsharex.model.LoginResponse
 import com.example.skillsharex.model.*
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -34,6 +34,9 @@ interface AuthApi {
         @Field("password") password: String,
         @Field("phone") phone: String
     ): Response<SignUpResponse>
+
+    @POST("api/auth/forgot_password.php")
+    suspend fun forgotPassword(@Body request: ForgotPasswordRequest): Response<ForgotPasswordResponse>
 
 
     @GET("api/dashboard/online_mentors.php")

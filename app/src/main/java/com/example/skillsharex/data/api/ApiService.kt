@@ -1,8 +1,8 @@
 package com.example.skillsharex.data.api
 
 
-import com.example.skillsharex.data.models.LoginRequest
-import com.example.skillsharex.data.models.LoginResponse
+import com.example.skillsharex.model.LoginRequest
+import com.example.skillsharex.model.LoginResponse
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.POST

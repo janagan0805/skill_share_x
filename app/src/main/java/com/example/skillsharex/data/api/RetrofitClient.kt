@@ -1,7 +1,7 @@
 package com.example.skillsharex.data.api
 
-import com.example.skillsharex.data.models.LoginRequest
-import com.example.skillsharex.data.models.LoginResponse
+import com.example.skillsharex.model.LoginRequest
+import com.example.skillsharex.model.LoginResponse
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -17,7 +17,7 @@ interface ApiService {
 
 object RetrofitClient {
     // Change this to your actual base URL
-    private const val BASE_URL = "http://10.119.69.111/skillsharex_backend/"
+    private const val BASE_URL = "http://192.168.31.11:8080/skillsharex_backend/"
 
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
