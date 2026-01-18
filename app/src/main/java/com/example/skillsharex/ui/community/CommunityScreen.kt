@@ -12,6 +12,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -22,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,7 +31,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.skillsharex.model.community.CommunityPost
-import com.example.skillsharex.viewmodel.CommunityViewModel
+import com.example.skillsharex.network.AuthApiClient
+import com.example.skillsharex.viewmodel.community.CommunityViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,11 +41,13 @@ fun CommunityScreen(
     viewModel: CommunityViewModel = viewModel()
 ) {
 
+    val context = LocalContext.current
+
     LaunchedEffect(Unit) {
-        viewModel.loadCommunityFeed()
+        viewModel.loadCommunityFeed(context)
     }
     LaunchedEffect(navController.currentBackStackEntry) {
-        viewModel.loadCommunityFeed()
+        viewModel.loadCommunityFeed(context)
     }
 
 
@@ -73,12 +78,6 @@ fun CommunityScreen(
                     )
                 }
 
-                viewModel.errorMessage != null -> {
-                    ErrorState {
-                        viewModel.loadCommunityFeed()
-                    }
-                }
-
                 viewModel.feedPosts.isEmpty() -> {
                     EmptyState()
                 }
@@ -89,7 +88,11 @@ fun CommunityScreen(
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         items(viewModel.feedPosts, key = { it.postId }) { post ->
-                            CommunityPostCard(post)
+                            CommunityPostCard(
+                                post = post,
+                                onClick = { navController.navigate("post_detail/${post.postId}") },
+                                onLikeClick = { viewModel.toggleLike(context, post) }
+                            )
                         }
                     }
                 }
@@ -135,19 +138,26 @@ fun CommunityHeader(navController: NavController) {
 /* ---------------- POST CARD ---------------- */
 
 @Composable
-fun CommunityPostCard(post: CommunityPost) {
-
+fun CommunityPostCard(
+    post: CommunityPost,
+    onClick: () -> Unit,
+    onLikeClick: () -> Unit
+) {
     Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
+        // ... shapes ...
+
         shape = RoundedCornerShape(14.dp),
         elevation = CardDefaults.cardElevation(3.dp),
-        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(Modifier.padding(16.dp)) {
+            // User Info Row ...
 
-            /* USER INFO */
             Row(verticalAlignment = Alignment.CenterVertically) {
                 AsyncImage(
-                    model = post.userAvatarUrl,
+                    model = AuthApiClient.IMAGE_BASE_URL + post.userAvatarUrl,
                     contentDescription = "Avatar",
                     modifier = Modifier
                         .size(42.dp)
@@ -163,23 +173,39 @@ fun CommunityPostCard(post: CommunityPost) {
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
-            /* CONTENT */
             Text(post.postTitle, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(6.dp))
-            Text(post.postContentSnippet, fontSize = 14.sp)
+            Text(post.postContentSnippet ?: "", maxLines = 3)
 
-            Spacer(Modifier.height(14.dp))
-
-            /* ACTIONS */
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                ActionItem(Icons.Default.Favorite, post.likeCount.toString())
-                ActionItem(Icons.Default.ChatBubbleOutline, post.commentCount.toString())
-                ActionItem(Icons.Default.Share, "Share")
+            // Image Preview in Feed (Optional)
+            if (!post.postImage.isNullOrEmpty()) {
+                AsyncImage(
+                    model = AuthApiClient.IMAGE_BASE_URL + post.postImage,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            }
+            // Actions
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                // Like Button
+                Row(Modifier.clickable { onLikeClick() }) {
+                    Icon(
+                        if (post.isLiked) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = "Like",
+                        tint = if (post.isLiked) Color.Red else Color.Gray
+                    )
+                    Text(" ${post.likeCount}")
+                }
+                // Comment Icon
+                Row {
+                    Icon(Icons.Default.ChatBubbleOutline, null)
+                    Text(" ${post.commentCount}")
+                }
             }
         }
     }

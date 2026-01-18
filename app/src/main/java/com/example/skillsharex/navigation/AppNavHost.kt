@@ -9,8 +9,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
-import com.example.skillsharex.ui.call.CallScreen
-import com.example.skillsharex.ui.chat.ChatScreen
 import com.example.skillsharex.ui.chatbot.ChatbotScreen
 import com.example.skillsharex.ui.community.*
 import com.example.skillsharex.ui.course.CourseDetailScreen
@@ -34,6 +32,8 @@ import com.example.skillsharex.ui.splash.AppSplashScreen
 import com.example.skillsharex.ui.splash.OnboardingScreen
 import com.example.skillsharex.utils.SessionManager
 import com.example.skillsharex.viewmodel.*
+import com.example.skillsharex.viewmodel.community.CommunityViewModel
+import com.example.skillsharex.viewmodel.community.CreatePostViewModel
 
 @RequiresApi(Build.VERSION_CODES.P)
 @Composable
@@ -142,17 +142,16 @@ fun AppNavHost() {
         composable("create_post") {
             CreatePostScreen(
                 navController = navController,
-                createPostViewModel = createPostViewModel
             )
         }
 
         composable(
-            route = "post_detail/{postTitle}",
-            arguments = listOf(navArgument("postTitle") { type = NavType.StringType })
+            route = "post_detail/{postId}",
+            arguments = listOf(navArgument("postId") { type = NavType.StringType })
         ) { backStackEntry ->
             PostDetailScreen(
                 navController = navController,
-                postTitle = backStackEntry.arguments?.getString("postTitle") ?: ""
+                postId = backStackEntry.arguments?.getString("postId") ?: ""
             )
         }
 

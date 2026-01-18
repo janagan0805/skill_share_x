@@ -46,7 +46,7 @@ import com.example.skillsharex.model.MentorData
 import com.example.skillsharex.navigation.safeNavigate
 import com.example.skillsharex.network.AuthApiClient
 import com.example.skillsharex.utils.SessionManager
-import com.example.skillsharex.viewmodel.DashboardViewModel
+import com.example.skillsharex.viewmodel.home.DashboardViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

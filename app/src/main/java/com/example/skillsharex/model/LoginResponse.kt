@@ -3,10 +3,10 @@ package com.example.skillsharex.model
 data class LoginResponse(
     val status: String,
     val message: String,
-    val user: User? = null
+    val user: UserData? = null
 )
 
-data class User(
+data class UserData(
     val id: Int,
     val full_name: String,
     val email: String,

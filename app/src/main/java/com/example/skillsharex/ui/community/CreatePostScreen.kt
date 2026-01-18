@@ -1,7 +1,10 @@
 package com.example.skillsharex.ui.community
-
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -10,12 +13,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -23,52 +29,38 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.example.skillsharex.network.AuthApiClient
 import com.example.skillsharex.utils.SessionManager
-import com.example.skillsharex.viewmodel.CommunityViewModel
-import com.example.skillsharex.viewmodel.CreatePostEvent
-import com.example.skillsharex.viewmodel.CreatePostViewModel
+import com.example.skillsharex.viewmodel.community.CreatePostEvent
+import com.example.skillsharex.viewmodel.community.CreatePostViewModel
 import kotlinx.coroutines.flow.collectLatest
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreatePostScreen(
     navController: NavController,
-    createPostViewModel: CreatePostViewModel = viewModel()
+    viewModel: CreatePostViewModel = viewModel()
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     val sessionManager = remember { SessionManager(context) }
     val userId = sessionManager.getUserId()
-
-    val uiState = createPostViewModel.uiState
-    val isPostEnabled = createPostViewModel.isPostButtonEnabled
+    val uiState = viewModel.uiState
     val snackbarHostState = remember { SnackbarHostState() }
-
-    // Load user from DB (REAL DATA)
-    LaunchedEffect(userId) {
-        if (userId > 0) {
-            createPostViewModel.loadUser(userId)
-        } else {
-            snackbarHostState.showSnackbar("User not logged in")
-        }
+    // Image Picker Launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        viewModel.onImageSelected(uri)
     }
-
-    // Listen for events
-    LaunchedEffect(createPostViewModel) {
-        createPostViewModel.events.collectLatest { event ->
+    LaunchedEffect(userId) { if (userId > 0) viewModel.loadUser(userId) }
+    LaunchedEffect(viewModel) {
+        viewModel.events.collectLatest { event ->
             when (event) {
-                is CreatePostEvent.PostSuccess -> {
-                    navController.popBackStack()
-                }
-                is CreatePostEvent.PostError -> {
-                    snackbarHostState.showSnackbar(
-                        event.message.ifBlank { "Failed to create post" }
-                    )
-                }
+                is CreatePostEvent.PostSuccess -> navController.popBackStack()
+                is CreatePostEvent.PostError -> snackbarHostState.showSnackbar(event.message)
             }
         }
     }
-
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -76,79 +68,87 @@ fun CreatePostScreen(
                 title = { Text("Create Post") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                     }
                 },
                 actions = {
                     TextButton(
-                        enabled = isPostEnabled && !uiState.isPosting,
-                        onClick = { createPostViewModel.submitPost() }
+                        enabled = viewModel.isPostButtonEnabled,
+                        onClick = { viewModel.submitPost(context) }
                     ) {
-                        if (uiState.isPosting) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Text("Post", fontWeight = FontWeight.Bold)
-                        }
+                        if (uiState.isPosting) CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                        else Text("Post", fontWeight = FontWeight.Bold)
                     }
                 }
             )
         }
     ) { padding ->
-
-        // If user is still loading
         if (uiState.user == null) {
-            Box(
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        } else {
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                CircularProgressIndicator()
+                UserHeader(uiState.user.name, uiState.user.role, uiState.user.avatar_url ?: "")
+                TopicSelector(uiState.selectedTopic, viewModel::onTopicSelect)
+
+                // Title & Description
+                OutlinedTextField(
+                    value = uiState.title,
+                    onValueChange = viewModel::onTitleChange,
+                    label = { Text("Title") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = uiState.description,
+                    onValueChange = viewModel::onDescriptionChange,
+                    label = { Text("Content") },
+                    modifier = Modifier.fillMaxWidth().height(150.dp)
+                )
+                // Image Preview
+                uiState.selectedImageUri?.let { uri ->
+                    Box {
+                        Image(
+                            painter = rememberAsyncImagePainter(uri),
+                            contentDescription = "Selected Image",
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                        IconButton(
+                            onClick = { viewModel.onImageSelected(null) },
+                            modifier = Modifier.align(Alignment.TopEnd).padding(8.dp)
+                                .background(Color.White.copy(alpha=0.7f), CircleShape)
+                        ) {
+                            Icon(Icons.Default.Close, "Remove")
+                        }
+                    }
+                }
+                // Add Image Button
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { imagePickerLauncher.launch("image/*") }
+                        .border(1.dp, Color.Gray, RoundedCornerShape(12.dp))
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.AddAPhoto, null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Add Photo", color = MaterialTheme.colorScheme.primary)
+                }
             }
-            return@Scaffold
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
-        ) {
-
-            // REAL USER FROM DATABASE
-            UserHeader(
-                userName = uiState.user.name,
-                userRole = uiState.user.role,
-                avatarUrl = uiState.user.avatar_url ?: ""
-            )
-
-            TopicSelector(
-                selectedTopic = uiState.selectedTopic,
-                onTopicSelected = createPostViewModel::onTopicSelect
-            )
-
-            PostInputFields(
-                title = uiState.title,
-                onTitleChange = createPostViewModel::onTitleChange,
-                description = uiState.description,
-                onDescriptionChange = createPostViewModel::onDescriptionChange
-            )
-
-            PostActionBar()
         }
     }
 }
-
-
-
 @Composable
 fun UserHeader(userName: String, userRole: String, avatarUrl: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {

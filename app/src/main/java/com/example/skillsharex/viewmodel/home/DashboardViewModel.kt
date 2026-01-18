@@ -1,4 +1,4 @@
-package com.example.skillsharex.viewmodel
+package com.example.skillsharex.viewmodel.home
 
 import android.util.Log
 import androidx.compose.runtime.getValue

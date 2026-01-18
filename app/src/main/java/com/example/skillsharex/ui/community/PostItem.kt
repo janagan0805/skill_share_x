@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.skillsharex.model.Post
 
 @Composable
 fun PostItem(
@@ -34,13 +35,13 @@ fun PostItem(
             ) {
                 IconButton(onClick = onLikeClick) {
                     Icon(
-                        imageVector = if (post.is_liked)
+                        imageVector = if (post.isLiked)
                             Icons.Filled.Favorite
                         else Icons.Outlined.FavoriteBorder,
                         contentDescription = null
                     )
                 }
-                Text("${post.like_count}")
+                Text("${post.likes}")
             }
         }
     }

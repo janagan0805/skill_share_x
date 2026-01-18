@@ -1,151 +1,124 @@
 package com.example.skillsharex.ui.community
-
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ChatBubbleOutline
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
-
-
-
-
-
-
-private val LavenderBg = Color(0xFFE8E6FF)
-private val HeaderPurple = Color(0xFF544DCA)
-private val PrimaryBlue = Color(0xFF1022FF)
-
+import coil.compose.AsyncImage
+import com.example.skillsharex.network.AuthApiClient
+import com.example.skillsharex.viewmodel.community.CommunityViewModel
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostDetailScreen(
     navController: NavController,
-    postTitle: String
+    postId: String,
+    viewModel: CommunityViewModel = viewModel()
 ) {
-
-    val comments = remember {
-        listOf(
-            "This explanation really helped 👍",
-            "Can you share some resources?",
-            "Nice question, I had the same doubt!"
-        )
+    val context = LocalContext.current
+    var commentText by remember { mutableStateOf("") }
+    LaunchedEffect(postId) {
+        viewModel.loadPostDetails(context, postId.toInt())
     }
-
-    Scaffold(containerColor = LavenderBg) { padding ->
-
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-        ) {
-
-            /* ---------- HEADER ---------- */
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(HeaderPurple)
-                    .clip(RoundedCornerShape(bottomStart = 25.dp, bottomEnd = 25.dp))
-                    .padding(16.dp, 50.dp, 16.dp, 20.dp)
+    val post = viewModel.currentPost
+    val comments = viewModel.currentComments
+    Scaffold(
+        bottomBar = {
+            // Comment Input
+            Row(
+                Modifier
+                    .background(Color.White)
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        Icons.Default.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White,
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clickable { navController.popBackStack() }
-                    )
-                    Spacer(Modifier.width(12.dp))
-                    Text(
-                        text = "Post Detail",
-                        color = Color.White,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                OutlinedTextField(
+                    value = commentText,
+                    onValueChange = { commentText = it },
+                    modifier = Modifier.weight(1f),
+                    placeholder = { Text("Add a comment...") },
+                    shape = RoundedCornerShape(20.dp)
+                )
+                IconButton(onClick = {
+                    if (commentText.isNotBlank()) {
+                        viewModel.addComment(context, postId.toInt(), commentText)
+                        commentText = ""
+                    }
+                }) {
+                    Icon(Icons.Default.Send, null, tint = MaterialTheme.colorScheme.primary)
                 }
             }
+        }
+    ) { padding ->
+        if (viewModel.isDetailsLoading || post == null) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+        } else {
+            LazyColumn(modifier = Modifier.padding(padding).padding(16.dp)) {
+                // Post Header
+                item {
 
-            Spacer(Modifier.height(16.dp))
-
-            /* ---------- POST CONTENT ---------- */
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth()
-            ) {
-                Column(Modifier.padding(16.dp)) {
-
+                    // User Info
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.Person,
-                            null,
-                            modifier = Modifier
-                                .size(42.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFE0E0FF))
-                                .padding(8.dp),
-                            tint = PrimaryBlue
+                        AsyncImage(
+                            model = AuthApiClient.IMAGE_BASE_URL + post.userAvatarUrl,
+                            contentDescription = null,
+                            modifier = Modifier.size(40.dp).clip(CircleShape)
                         )
-                        Spacer(Modifier.width(10.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(post.userName, fontWeight = FontWeight.SemiBold)
+                    }
+                    Spacer(Modifier.height(16.dp))
+
+
+                    Text(post.postTitle, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                    Spacer(Modifier.height(8.dp))
+                    // Content
+                    Text(post.postContent ?: "", fontSize = 16.sp) // Or full content if your API returns it
+
+                    // Image
+                    if (!post.postImage.isNullOrEmpty()) {
+                        Spacer(Modifier.height(12.dp))
+                        AsyncImage(
+                            model = AuthApiClient.IMAGE_BASE_URL + post.postImage,
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)),
+                            contentScale = ContentScale.FillWidth
+                        )
+                    }
+
+                    Divider(Modifier.padding(vertical = 16.dp))
+                    Text("Comments (${comments.size})", fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(8.dp))
+                }
+                // Comments List
+                items(comments) { comment ->
+                    Row(Modifier.padding(vertical = 8.dp)) {
+                        AsyncImage(
+                            model = AuthApiClient.IMAGE_BASE_URL + comment.userAvatarUrl,
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp).clip(CircleShape)
+                        )
+                        Spacer(Modifier.width(8.dp))
                         Column {
-                            Text("Arun", fontWeight = FontWeight.Bold)
-                            Text("Android Learner", fontSize = 12.sp)
+                            Text(comment.userName, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            Text(comment.content, fontSize = 14.sp)
                         }
                     }
-
-                    Spacer(Modifier.height(12.dp))
-
-                    Text(
-                        text = postTitle,
-                        fontSize = 15.sp
-                    )
-
-                    Spacer(Modifier.height(14.dp))
-
-                    Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                        Icon(Icons.Default.FavoriteBorder, null, tint = PrimaryBlue)
-                        Icon(Icons.Default.ChatBubbleOutline, null, tint = PrimaryBlue)
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            /* ---------- COMMENTS ---------- */
-            Text(
-                text = "Comments",
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
-            )
-
-            LazyColumn(
-                modifier = Modifier.padding(horizontal = 16.dp)
-            ) {
-                items(comments) { comment ->
-                    Text(
-                        text = "• $comment",
-                        modifier = Modifier.padding(vertical = 6.dp),
-                        fontSize = 13.sp
-                    )
                 }
             }
         }
