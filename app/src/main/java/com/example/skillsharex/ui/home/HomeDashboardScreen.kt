@@ -61,22 +61,6 @@ fun HomeDashboardScreen(
         viewModel.loadDashboardData()
     }
 
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    LaunchedEffect(lifecycleOwner) {
-        lifecycleOwner.lifecycle.repeatOnLifecycle(
-            Lifecycle.State.STARTED
-        ) {
-            RefreshBus.events.collect { event ->
-                when (event) {
-                    RefreshEvent.ProfileUpdated -> {
-                        viewModel.loadDashboardData(force = true)
-                    }
-                    else -> Unit
-                }
-            }
-        }
-    }
 
 
 

@@ -39,7 +39,13 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.skillsharex.viewmodel.MentorListViewModel
+import com.example.skillsharex.viewmodel.SessionViewModel
+import com.example.skillsharex.viewmodel.community.CommunityViewModel
+import com.example.skillsharex.viewmodel.home.DashboardViewModel
 
 
 @RequiresApi(Build.VERSION_CODES.P)
@@ -55,6 +61,14 @@ fun MainScaffold(
         Routes.PROFILE
     )
 
+
+    /* ---------- VIEWMODELS (TOP LEVEL) ---------- */
+    val homeViewModel: DashboardViewModel = viewModel()
+    val communityViewModel: CommunityViewModel = viewModel()
+    val mentorListViewModel: MentorListViewModel = viewModel()
+    val sessionViewModel: SessionViewModel = viewModel()
+
+    val context = LocalContext.current
     val mainNavController = rememberNavController()
 
     val navBackStackEntry =
@@ -62,6 +76,26 @@ fun MainScaffold(
 
     val currentRoute =
         navBackStackEntry.value?.destination?.route
+
+    LaunchedEffect(currentRoute) {
+        when (currentRoute) {
+            Routes.HOME -> {
+                homeViewModel.loadDashboardData(force = true)
+            }
+
+            Routes.COMMUNITY -> {
+                communityViewModel.loadCommunityFeed(context, force = true)
+            }
+
+            Routes.MENTORS -> {
+                mentorListViewModel.loadMentorsList(force = true)
+            }
+
+            Routes.SESSIONS -> {
+                sessionViewModel.loadSessions(force = true)
+            }
+        }
+    }
 
 
     Scaffold(
@@ -93,19 +127,31 @@ fun MainScaffold(
         ) {
 
             composable(Routes.HOME) {
-                HomeDashboardScreen(mainNavController)
+                HomeDashboardScreen(
+                    navController = mainNavController,
+                    viewModel = homeViewModel
+                )
             }
 
             composable(Routes.COMMUNITY) {
-                CommunityScreen(mainNavController)
-            }
-
-            composable(Routes.SESSIONS) {
-                SessionListScreen(mainNavController)
+                CommunityScreen(
+                    navController = mainNavController,
+                    viewModel = communityViewModel
+                )
             }
 
             composable(Routes.MENTORS) {
-                MentorListScreen(mainNavController)
+                MentorListScreen(
+                    navController = mainNavController,
+                    viewModel = mentorListViewModel
+                )
+            }
+
+            composable(Routes.SESSIONS) {
+                SessionListScreen(
+                    navController = mainNavController,
+                    sessionViewModel = sessionViewModel
+                )
             }
 
             composable(Routes.PROFILE) {

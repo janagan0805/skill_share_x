@@ -62,23 +62,6 @@ fun MentorListScreen(
         viewModel.loadMentorsList()
     }
 
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    LaunchedEffect(lifecycleOwner) {
-        lifecycleOwner.lifecycle.repeatOnLifecycle(
-            Lifecycle.State.STARTED
-        ) {
-            RefreshBus.events.collect { event ->
-                when (event) {
-                    RefreshEvent.ProfileUpdated -> {
-                        viewModel.loadMentorsList(force = true)
-
-                    }
-                    else -> Unit
-                }
-            }
-        }
-    }
 
 
 

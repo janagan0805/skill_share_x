@@ -48,23 +48,6 @@ fun SessionListScreen(
         sessionViewModel.loadSessions()
     }
 
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    LaunchedEffect(lifecycleOwner) {
-        lifecycleOwner.lifecycle.repeatOnLifecycle(
-            Lifecycle.State.STARTED
-        ) {
-            RefreshBus.events.collect { event ->
-                when (event) {
-                    RefreshEvent.ProfileUpdated -> {
-                        sessionViewModel.loadSessions()
-                    }
-                    else -> Unit
-                }
-            }
-        }
-    }
-
 
     Scaffold(
         topBar = {

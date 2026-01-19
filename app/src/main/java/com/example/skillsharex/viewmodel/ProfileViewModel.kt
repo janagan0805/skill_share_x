@@ -163,9 +163,6 @@
                         // 🔑 FORCE IMAGE RELOAD ONLY ON CHANGE
                         imageReloadKey.value++
                         // refresh full app
-                        withContext(Dispatchers.Main) {
-                            RefreshBus.send(RefreshEvent.ProfileUpdated)
-                        }
                     }
 
 
@@ -210,9 +207,7 @@
                         sessionManager?.saveSkills(skills.joinToString(","))
 
                         // refresh full app
-                        withContext(Dispatchers.Main) {
-                            RefreshBus.send(RefreshEvent.ProfileUpdated)
-                        }
+
                     }
 
                     fetchProfile()

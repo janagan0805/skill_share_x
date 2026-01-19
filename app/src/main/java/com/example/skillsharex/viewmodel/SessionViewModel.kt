@@ -23,8 +23,13 @@ class SessionViewModel : ViewModel() {
     private val _selectedSession = MutableStateFlow<Session?>(null)
     val selectedSession: StateFlow<Session?> = _selectedSession.asStateFlow()
 
+    private var hasLoadedOnce = false
+
     // --- Load all sessions ---
-    fun loadSessions() {
+    fun loadSessions(force: Boolean = false) {
+
+        if (hasLoadedOnce && !force) return
+
         viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -35,6 +40,8 @@ class SessionViewModel : ViewModel() {
                 } else {
                     _sessions.value = emptyList()
                 }
+
+                hasLoadedOnce = true
 
             } catch (e: Exception) {
                 e.printStackTrace()
