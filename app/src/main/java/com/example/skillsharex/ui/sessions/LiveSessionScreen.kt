@@ -1,4 +1,4 @@
-package com.example.skillsharex.ui.session
+package com.example.skillsharex.ui.sessions
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -40,9 +40,7 @@ fun LiveSessionScreen(
     val sessionViewModel: SessionViewModel = viewModel()
 
     LaunchedEffect(sessionId) {
-        if (sessionViewModel.selectedSession == null) {
             sessionViewModel.loadSessionDetail(sessionId.toInt())
-        }
     }
 
     val session = sessionViewModel.selectedSession.value

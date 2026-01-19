@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.compose.runtime)
+    implementation("androidx.multidex:multidex:2.0.1")
 
     // androidx.compose.material3:material3 for chatbot ui
     implementation("io.ktor:ktor-client-core:2.3.7")

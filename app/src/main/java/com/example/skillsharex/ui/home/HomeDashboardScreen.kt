@@ -1,30 +1,20 @@
 package com.example.skillsharex.ui.home
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Book
 import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material3.*
-import com.google.accompanist.swiperefresh.SwipeRefresh
-import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -35,18 +25,23 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.skillsharex.R
 import com.example.skillsharex.model.CourseData
 import com.example.skillsharex.model.MentorData
-import com.example.skillsharex.navigation.safeNavigate
+import com.example.skillsharex.navigation.Routes
 import com.example.skillsharex.network.AuthApiClient
+import com.example.skillsharex.utils.RefreshBus
+import com.example.skillsharex.utils.RefreshEvent
 import com.example.skillsharex.utils.SessionManager
 import com.example.skillsharex.viewmodel.home.DashboardViewModel
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,19 +56,30 @@ fun HomeDashboardScreen(
 
     val categories = listOf("UI/UX", "Android", "Java", "Photoshop", "Design", "Career")
 
-    /* ---------- RELOAD ON RESUME ---------- */
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.loadDashboardData()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    // ✅ Load ONCE
+    LaunchedEffect(Unit) {
+        viewModel.loadDashboardData()
     }
 
-    /* ---------- SWIPE REFRESH STATE ---------- */
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(
+            Lifecycle.State.STARTED
+        ) {
+            RefreshBus.events.collect { event ->
+                when (event) {
+                    RefreshEvent.ProfileUpdated -> {
+                        viewModel.loadDashboardData(force = true)
+                    }
+                    else -> Unit
+                }
+            }
+        }
+    }
+
+
+
     val swipeState = rememberSwipeRefreshState(
         isRefreshing = viewModel.isLoading
     )
@@ -81,98 +87,98 @@ fun HomeDashboardScreen(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate("chatbot") },
+                onClick = { navController.navigate(Routes.CHATBOT) },
                 containerColor = Color(0xFFFACC15),
                 shape = RoundedCornerShape(50)
             ) {
                 Icon(Icons.Outlined.SmartToy, null)
             }
-        },
-        bottomBar = {
-            BottomBar(
-                navController = navController,
-                onProfileClick = { navController.navigate("profile") },
-                onOpenCourses = { navController.navigate("session_list") },
-                onOpenMentors = { navController.navigate("mentors") },
-                onOpenCommunity = { navController.safeNavigate("community") }
-            )
         }
     ) { padding ->
 
         SwipeRefresh(
             state = swipeState,
-            onRefresh = { viewModel.loadDashboardData() },
+            onRefresh = { viewModel.loadDashboardData(force = true) },
             modifier = Modifier.padding(padding)
         ) {
 
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
             ) {
 
-                /* ---------- HEADER ---------- */
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF544DCA)),
-                    shape = RoundedCornerShape(bottomStart = 25.dp, bottomEnd = 25.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(Modifier.padding(20.dp)) {
-                        Text(
-                            text = "Welcome ${userName ?: "User"} 👋",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF544DCA)),
+                        shape = RoundedCornerShape(bottomStart = 25.dp, bottomEnd = 25.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(Modifier.padding(20.dp)) {
+                            Text(
+                                text = "Welcome ${userName ?: "User"} 👋",
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
 
-                Spacer(Modifier.height(16.dp))
+                item {
+                    Spacer(Modifier.height(16.dp))
+                }
 
-                LazyRow(Modifier.padding(start = 12.dp)) {
-                    items(categories) {
-                        AssistChip(
-                            onClick = {},
-                            label = { Text(it) },
-                            modifier = Modifier.padding(end = 8.dp)
-                        )
+                item {
+                    LazyRow(
+                        modifier = Modifier.padding(start = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(categories) {
+                            AssistChip(
+                                onClick = {},
+                                label = { Text(it) }
+                            )
+                        }
                     }
                 }
 
-                ActiveSessionCard(navController)
+                item {
+                    ActiveSessionCard(navController)
+                }
 
-                DashboardSection(
-                    title = "Courses Available Now",
-                    items = viewModel.courses
-                ) { course ->
-                    CourseCard(course) {
-                        navController.navigate("courseDetail/${course.id}")
+                item {
+                    DashboardSection(
+                        title = "Courses Available Now",
+                        items = viewModel.activeCourses
+                    ) { course ->
+                        CourseCard(course) {
+                            navController.navigate("courseDetail/${course.id}")
+                        }
                     }
                 }
 
-                DashboardSection(
-                    title = "Top Mentors For You",
-                    items = viewModel.mentors
-                ) { mentor ->
-                    MentorCard(mentor) {
-                        navController.navigate("mentorDetail/${mentor.id}")
+                item {
+                    DashboardSection(
+                        title = "Top Mentors For You",
+                        items = viewModel.mentors
+                    ) { mentor ->
+                        MentorCard(mentor) {
+                            navController.navigate("mentorDetail/${mentor.id}")
+                        }
                     }
                 }
 
-                Spacer(Modifier.height(80.dp))
+                item {
+                    Spacer(Modifier.height(80.dp))
+                }
             }
         }
     }
 }
 
-
 /* ---------------- ACTIVE SESSION CARD ---------------- */
 
 @Composable
-fun ActiveSessionCard(
-    navController: NavController
-) {
-
+fun ActiveSessionCard(navController: NavController) {
     Card(
         modifier = Modifier
             .padding(16.dp)
@@ -188,16 +194,20 @@ fun ActiveSessionCard(
             Spacer(modifier = Modifier.height(8.dp))
             Button(
                 onClick = {
-                    navController.navigate("session_list")
+                    navController.navigate(Routes.SESSIONS) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 }
             ) {
                 Text("View All Sessions")
             }
-
         }
     }
 }
-
 
 /* ---------------- DASHBOARD SECTION ---------------- */
 
@@ -219,13 +229,12 @@ fun <T> DashboardSection(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                    .padding(vertical = 24.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "Nothing to show at the moment.",
-                    color = Color.Gray,
-                    fontSize = 14.sp
+                    "No active courses right now.",
+                    color = Color.Gray
                 )
             }
         } else {
@@ -257,24 +266,10 @@ fun MentorCard(
     ) {
         Column {
 
-//            AsyncImage(
-//                model = ImageRequest.Builder(LocalContext.current)
-//                    .data(mentor.imageUrl?.let { AuthApiClient.IMAGE_BASE_URL + it })
-//                    .crossfade(true)
-//                    .build(),
-//                placeholder = painterResource(id = R.drawable.profile),
-//                error = painterResource(id = R.drawable.profile),
-//                contentDescription = mentor.name,
-//                contentScale = ContentScale.Crop,
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(110.dp)
-//            )
-            val url = AuthApiClient.IMAGE_BASE_URL + mentor.imageUrl
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(url)
-                    .setParameter("time", System.currentTimeMillis()) // bust cache
+                    .data(AuthApiClient.IMAGE_BASE_URL + mentor.imageUrl)
+                    .crossfade(true)
                     .build(),
                 contentDescription = mentor.name,
                 contentScale = ContentScale.Crop,
@@ -283,18 +278,16 @@ fun MentorCard(
                     .height(110.dp)
             )
 
-
             Column(modifier = Modifier.padding(10.dp)) {
-
                 Text(
-                    text = mentor.skill ?: "No Skill",
+                    text = "${mentor.name ?: "Unknown"}",
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
 
                 Text(
-                    text = "Mentor: ${mentor.name ?: "Unknown"}",
+                    text = "Skills : ${mentor.skill ?: "No Skill"}",
                     fontSize = 12.sp,
                     color = Color.Gray
                 )
@@ -307,13 +300,14 @@ fun MentorCard(
                         modifier = Modifier
                             .size(8.dp)
                             .background(
-                                if (mentor.status.equals("online", ignoreCase = true)) Color.Green else Color.Gray,
+                                if (mentor.status.equals("online", true))
+                                    Color.Green else Color.Gray,
                                 shape = RoundedCornerShape(50)
                             )
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (mentor.status.equals("online", ignoreCase = true)) "Online" else "Offline",
+                        text = if (mentor.status.equals("online", true)) "Online" else "Offline",
                         fontSize = 12.sp
                     )
                     Spacer(modifier = Modifier.weight(1f))
@@ -355,7 +349,6 @@ fun CourseCard(
             )
 
             Column(modifier = Modifier.padding(10.dp)) {
-
                 Text(
                     text = course.course_name ?: "Untitled Course",
                     fontWeight = FontWeight.Bold,
@@ -377,66 +370,19 @@ fun CourseCard(
                         modifier = Modifier
                             .size(8.dp)
                             .background(
-                                if (course.mentor_online_status.equals("online", ignoreCase = true)) Color.Green else Color.Gray,
+                                if (course.mentor_online_status.equals("online", true))
+                                    Color.Green else Color.Gray,
                                 shape = RoundedCornerShape(50)
                             )
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = if (course.mentor_online_status.equals("online", ignoreCase = true)) "Online" else "Offline",
+                        text = if (course.mentor_online_status.equals("online", true))
+                            "Mentor is Online" else "Mentor is Offline",
                         fontSize = 12.sp
                     )
                 }
             }
         }
-    }
-}
-
-/* ---------------- BOTTOM BAR ---------------- */
-
-@Composable
-fun BottomBar(
-    navController: NavController,
-    onProfileClick: () -> Unit,
-    onOpenCourses: () -> Unit,
-    onOpenMentors: () -> Unit,
-    onOpenCommunity: () -> Unit
-) {
-    NavigationBar(containerColor = Color.White) {
-
-        NavigationBarItem(
-            selected = navController.currentDestination?.route == "home",
-            onClick = { navController.navigate("home") },
-            icon = { Icon(Icons.Default.Home, null, tint = Color(0xFF425CFF)) },
-            label = { Text("Home") }
-        )
-
-        NavigationBarItem(
-            selected = navController.currentDestination?.route == "community",
-            onClick = onOpenCommunity,
-            icon = { Icon(Icons.Default.People, null) },
-            label = { Text("Community") }
-        )
-
-        NavigationBarItem(
-            selected = navController.currentDestination?.route == "session_list",
-            onClick = onOpenCourses,
-            icon = { Icon(Icons.Outlined.Book, null) },
-            label = { Text("Sessions") }
-        )
-
-        NavigationBarItem(
-            selected = navController.currentDestination?.route == "mentors",
-            onClick = onOpenMentors,
-            icon = { Icon(Icons.Default.Person, null) },
-            label = { Text("Mentors") }
-        )
-
-        NavigationBarItem(
-            selected = navController.currentDestination?.route == "profile",
-            onClick = onProfileClick,
-            icon = { Icon(Icons.Default.AccountCircle, null) },
-            label = { Text("Profile") }
-        )
     }
 }

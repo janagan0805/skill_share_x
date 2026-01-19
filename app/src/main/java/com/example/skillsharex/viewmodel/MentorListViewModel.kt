@@ -22,6 +22,8 @@ class MentorListViewModel : ViewModel() {
     var errorMessage by mutableStateOf<String?>(null)
         private set
 
+    private var hasLoadedOnce = false
+
     /**
      * Fetch top mentors from backend
      */
@@ -50,7 +52,10 @@ class MentorListViewModel : ViewModel() {
         }
     }
 
-    fun loadMentorsList() {
+    fun loadMentorsList(force: Boolean = false) {
+
+        if (hasLoadedOnce && !force) return
+
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
@@ -64,6 +69,8 @@ class MentorListViewModel : ViewModel() {
                     mentors = emptyList()
                     errorMessage = response.message
                 }
+
+                hasLoadedOnce = true
 
             } catch (e: Exception) {
                 Log.e("MentorListVM", "Failed to load mentors", e)

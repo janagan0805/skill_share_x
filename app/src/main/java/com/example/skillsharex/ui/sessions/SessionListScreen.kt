@@ -1,4 +1,4 @@
-package com.example.skillsharex.ui.session
+package com.example.skillsharex.ui.sessions
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -13,13 +13,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.skillsharex.data.model.Session
+import com.example.skillsharex.utils.RefreshBus
+import com.example.skillsharex.utils.RefreshEvent
 import com.example.skillsharex.viewmodel.SessionViewModel
 
 // Theme colors
@@ -42,23 +48,45 @@ fun SessionListScreen(
         sessionViewModel.loadSessions()
     }
 
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(
+            Lifecycle.State.STARTED
+        ) {
+            RefreshBus.events.collect { event ->
+                when (event) {
+                    RefreshEvent.ProfileUpdated -> {
+                        sessionViewModel.loadSessions()
+                    }
+                    else -> Unit
+                }
+            }
+        }
+    }
+
+
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Sessions", color = Color.White) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color.White
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(Color(0xFF544DCA), Color(0xFF7A60D8))
                         )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = HeaderPurple
-                )
-            )
+                    )
+                    .padding(top = 20.dp, bottom = 20.dp, start = 25.dp, end = 20.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Sessions",
+                        color = Color.White,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
     ) { paddingValues ->
 

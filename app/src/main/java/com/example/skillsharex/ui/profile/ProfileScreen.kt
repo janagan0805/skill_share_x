@@ -1,5 +1,6 @@
 package com.example.skillsharex.ui.profile
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -25,18 +26,21 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.skillsharex.model.Course
-import com.example.skillsharex.navigation.Screen
 import com.example.skillsharex.network.AuthApiClient
 import com.example.skillsharex.utils.SessionManager
 import com.example.skillsharex.viewmodel.ProfileViewModel
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
+import com.example.skillsharex.navigation.Routes
 
 
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    viewModel: ProfileViewModel
+    rootNavController: NavController,
+    viewModel: ProfileViewModel = viewModel()
 ) {
 
     val context = LocalContext.current
@@ -66,20 +70,36 @@ fun ProfileScreen(
         viewModel.initSession(context)
         viewModel.fetchProfile()
     }
-    val refreshTrigger =
-        navController.currentBackStackEntry
-            ?.savedStateHandle
-            ?.getLiveData<Boolean>("profile_updated")
-            ?.observeAsState()
+//    val refreshTrigger =
+//        navController.currentBackStackEntry
+//            ?.savedStateHandle
+//            ?.getLiveData<Boolean>("profile_updated")
+//            ?.observeAsState()
+//
+//    LaunchedEffect(refreshTrigger?.value) {
+//        if (refreshTrigger?.value == true) {
+//            viewModel.fetchProfile()
+//            navController.currentBackStackEntry
+//                ?.savedStateHandle
+//                ?.remove<Boolean>("profile_updated")
+//        }
+//    }
 
-    LaunchedEffect(refreshTrigger?.value) {
-        if (refreshTrigger?.value == true) {
-            viewModel.fetchProfile()
-            navController.currentBackStackEntry
-                ?.savedStateHandle
-                ?.remove<Boolean>("profile_updated")
-        }
+    val savedStateHandle =
+        navController.currentBackStackEntry?.savedStateHandle
+
+    LaunchedEffect(savedStateHandle) {
+        savedStateHandle
+            ?.getStateFlow("profile_updated", false)
+            ?.collect { updated ->
+                if (updated) {
+                    viewModel.fetchProfile()
+                    // 🔑 Reset flag so it doesn’t loop
+                    savedStateHandle["profile_updated"] = false
+                }
+            }
     }
+
 
 
     Column(
@@ -94,7 +114,7 @@ fun ProfileScreen(
             viewModel = viewModel,
             userName = session.getUserName() ?: "User",
             onEditClick = {
-                navController.navigate(Screen.EditProfile.route)
+                navController.navigate(Routes.EDIT_PROFILE)
             }
         )
 
@@ -125,13 +145,13 @@ fun ProfileScreen(
             0 -> ProfileTabContent(
                 courses = myCourses,
                 onEditProfile = {
-                    navController.navigate(Screen.EditProfile.route)
+                    navController.navigate(Routes.EDIT_PROFILE)
                 },
                 onUserCourse = {
-                    navController.navigate(Screen.UserCourse.route) // 👈 NEW
+                    navController.navigate(Routes.MY_COURSES)
                 },
                 onOpenSettings = {
-                    navController.navigate(Screen.Settings.route)
+                    navController.navigate(Routes.SETTINGS)
                 },
                 onLogout = {
                     scope.launch {
@@ -143,12 +163,17 @@ fun ProfileScreen(
                         } catch (_: Exception) {
                         } finally {
                             session.logout()
-                            navController.navigate("login") {
-                                popUpTo(0) { inclusive = true }
+
+                            rootNavController.navigate(Routes.AUTH_GRAPH) {
+                                popUpTo(Routes.MAIN_GRAPH) {
+                                    inclusive = true
+                                }
+                                launchSingleTop = true
                             }
                         }
                     }
                 }
+
             )
 
             1 -> SessionsTabContent()
@@ -165,22 +190,42 @@ fun ProfileHeader(
     userName: String,
     onEditClick: () -> Unit
 ) {
+    val imagePath = viewModel.profileImagePath.value
+    val reloadKey = viewModel.imageReloadKey.value
+
+    val imageUrl = remember(imagePath, reloadKey) {
+        imagePath?.let {
+            AuthApiClient.IMAGE_BASE_URL + it
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box {
-            val imagePath = viewModel.profileImagePath.value
+            if (!imageUrl.isNullOrEmpty()) {
 
-            if (!imagePath.isNullOrEmpty()) {
+                val context = LocalContext.current
+                val imagePath = viewModel.profileImagePath.value
+                val reloadKey = viewModel.imageReloadKey.value
 
-                val imageUrl = imagePath?.let {
-                    AuthApiClient.IMAGE_BASE_URL + it + "?t=${System.currentTimeMillis()}"
+                val imageRequest = remember(imagePath, reloadKey) {
+                    ImageRequest.Builder(context)
+                        .data(
+                            imagePath?.let {
+                                AuthApiClient.IMAGE_BASE_URL + it
+                            }
+                        )
+                        // 🔑 THIS IS THE KEY FIX
+                        .memoryCacheKey("$imagePath-$reloadKey")
+                        .diskCacheKey("$imagePath-$reloadKey")
+                        .crossfade(true)
+                        .build()
                 }
 
                 AsyncImage(
-                    model = imageUrl,
+                    model = imageRequest,
                     contentDescription = null,
                     modifier = Modifier
                         .size(100.dp)
@@ -189,15 +234,7 @@ fun ProfileHeader(
                     contentScale = ContentScale.Crop
                 )
 
-//                AsyncImage(
-//                    model = AuthApiClient.IMAGE_BASE_URL + imagePath,
-//                    contentDescription = null,
-//                    modifier = Modifier
-//                        .size(100.dp)
-//                        .clip(CircleShape)
-//                        .background(Color.White),
-//                    contentScale = ContentScale.Crop
-//                )
+
             } else {
                 Icon(
                     Icons.Default.Person,
@@ -229,6 +266,7 @@ fun ProfileHeader(
         Text(viewModel.role.value, fontSize = 14.sp, color = Color.DarkGray)
     }
 }
+
 
 
 /* ---------------- PROFILE TAB ---------------- */

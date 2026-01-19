@@ -1,4 +1,4 @@
-package com.example.skillsharex.ui.mentor
+package com.example.skillsharex.ui.mentorscreen
 
 import android.content.Context
 import android.content.Intent
@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -151,8 +152,10 @@ fun MentorDetailScreen(
                                 contentDescription = null,
                                 modifier = Modifier
                                     .size(120.dp)
-                                    .clip(CircleShape)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
                             )
+
 
                             Spacer(Modifier.height(10.dp))
 

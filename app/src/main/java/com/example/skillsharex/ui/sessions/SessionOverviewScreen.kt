@@ -1,4 +1,4 @@
-package com.example.skillsharex.ui.session
+package com.example.skillsharex.ui.sessions
 
 import android.content.Context
 import android.content.Intent

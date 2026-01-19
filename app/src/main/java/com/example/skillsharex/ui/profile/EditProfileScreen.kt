@@ -31,6 +31,8 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.request.ImageRequest
 import com.example.skillsharex.network.AuthApiClient
 import com.example.skillsharex.utils.SessionManager
 import com.example.skillsharex.viewmodel.ProfileViewModel
@@ -45,7 +47,7 @@ private val PrimaryBlue = Color(0xFF1022FF)
 @Composable
 fun EditProfileScreen(
     navController: NavController,
-    viewModel: ProfileViewModel
+    viewModel: ProfileViewModel = viewModel()
 ) {
 
     val context = LocalContext.current
@@ -54,6 +56,7 @@ fun EditProfileScreen(
     // 🔑 Initialize session for ViewModel (IMPORTANT)
     LaunchedEffect(Unit) {
         viewModel.initSession(context)
+        viewModel.fetchProfile()
     }
 
 
@@ -128,12 +131,27 @@ fun EditProfileScreen(
 
                 Box(modifier = Modifier.size(120.dp)) {
 
-                    val imageUrl = imagePath?.let {
-                        AuthApiClient.IMAGE_BASE_URL + it + "?t=${System.currentTimeMillis()}"
+
+                    val context = LocalContext.current
+                    val imagePath = viewModel.profileImagePath.value
+                    val reloadKey = viewModel.imageReloadKey.value
+
+                    val imageRequest = remember(imagePath, reloadKey) {
+                        ImageRequest.Builder(context)
+                            .data(
+                                imagePath?.let {
+                                    AuthApiClient.IMAGE_BASE_URL + it
+                                }
+                            )
+                            // 🔑 THIS IS THE KEY FIX
+                            .memoryCacheKey("$imagePath-$reloadKey")
+                            .diskCacheKey("$imagePath-$reloadKey")
+                            .crossfade(true)
+                            .build()
                     }
 
                     AsyncImage(
-                        model = selectedImageUri ?: imageUrl,
+                        model = selectedImageUri ?: imageRequest,
                         contentDescription = null,
                         modifier = Modifier
                             .size(100.dp)
@@ -141,6 +159,7 @@ fun EditProfileScreen(
                             .background(Color.White),
                         contentScale = ContentScale.Crop
                     )
+
 
                     Icon(
                         Icons.Default.Edit,

@@ -31,7 +31,7 @@ fun SessionScreen(
 
     val sessionViewModel: SessionViewModel = viewModel()
 
-    var selectedTab by remember { mutableStateOf(0) }
+    var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Live", "Upcoming", "My Sessions")
 
     // 🔥 Load sessions from backend
@@ -108,7 +108,7 @@ fun SessionScreen(
             ) {
                 items(filteredSessions) { session ->
 
-                    SessionCard(
+                    Session_Card(
                         session = session,
                         onClick = {
                             navController.navigate("sessionDetail/${session.id}")
@@ -123,7 +123,7 @@ fun SessionScreen(
 /* ---------------- SESSION CARD ---------------- */
 
 @Composable
-fun SessionCard(
+fun Session_Card(
     session: Session,
     onClick: () -> Unit
 ) {

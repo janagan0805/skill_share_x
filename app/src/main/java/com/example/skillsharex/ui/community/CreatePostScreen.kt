@@ -56,7 +56,13 @@ fun CreatePostScreen(
     LaunchedEffect(viewModel) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is CreatePostEvent.PostSuccess -> navController.popBackStack()
+                is CreatePostEvent.PostSuccess -> {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("community_refresh", true)
+                    navController.popBackStack()
+                }
+
                 is CreatePostEvent.PostError -> snackbarHostState.showSnackbar(event.message)
             }
         }

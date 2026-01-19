@@ -10,8 +10,12 @@
     import androidx.lifecycle.viewModelScope
     import com.example.skillsharex.model.UpdateProfileRequest
     import com.example.skillsharex.network.AuthApiClient
+    import com.example.skillsharex.utils.RefreshBus
+    import com.example.skillsharex.utils.RefreshEvent
     import com.example.skillsharex.utils.SessionManager
+    import kotlinx.coroutines.Dispatchers
     import kotlinx.coroutines.launch
+    import kotlinx.coroutines.withContext
     import okhttp3.MediaType.Companion.toMediaType
     import okhttp3.MultipartBody
     import okhttp3.RequestBody.Companion.toRequestBody
@@ -38,6 +42,8 @@
         val isLoading = mutableStateOf(false)
         val isUploading = mutableStateOf(false)
         val errorMessage = mutableStateOf<String?>(null)
+        val imageReloadKey = mutableStateOf(0)
+
 
 
         // 🔑 STORE ONLY RELATIVE PATH
@@ -68,15 +74,15 @@
 
                     val data = body.data
 
-                    name.value = data.name ?: ""
-                    role.value = data.role ?: ""
+                    name.value = data.name
+                    role.value = data.role
 
                     skills.clear()
                     data.skills?.let { skills.addAll(it) }
 
                     // ✅ RELATIVE PATH ONLY
                     profileImagePath.value = data.profile_image
-                    data.profile_image?.let {
+                    data.profile_image.let {
                         sessionManager?.saveProfileImageUrl(it)
                     }
 
@@ -143,12 +149,25 @@
                         return@launch
                     }
 
-                    if(body.success){
-                        Toast.makeText(context, "Upload success", Toast.LENGTH_SHORT).show()
-                        Log.d("ProfileViewModel", "Upload success: ${body.data}")
-                        sessionManager!!.saveProfileImageUrl(body.data?.image_url)
+//                    if(body.success){
+//                        Log.d("ProfileViewModel", "Upload success: ${body.data}")
+//                        sessionManager!!.saveProfileImageUrl(body.data?.image_url)
+//                        profileImagePath.value = body.data?.image_url
+//                    }
+
+                    if (body.success) {
                         profileImagePath.value = body.data?.image_url
+                        sessionManager!!.saveProfileImageUrl(body.data?.image_url)
+                        Toast.makeText(context, "Upload success", Toast.LENGTH_SHORT).show()
+
+                        // 🔑 FORCE IMAGE RELOAD ONLY ON CHANGE
+                        imageReloadKey.value++
+                        // refresh full app
+                        withContext(Dispatchers.Main) {
+                            RefreshBus.send(RefreshEvent.ProfileUpdated)
+                        }
                     }
+
 
                     // ✅ UPDATE IMAGE LOCALLY (NO LOOP)
     //                body.data?.image_url?.let {
@@ -189,6 +208,11 @@
                         Log.d("Success Response", response.message)
                         sessionManager?.saveUserName(name.value)
                         sessionManager?.saveSkills(skills.joinToString(","))
+
+                        // refresh full app
+                        withContext(Dispatchers.Main) {
+                            RefreshBus.send(RefreshEvent.ProfileUpdated)
+                        }
                     }
 
                     fetchProfile()

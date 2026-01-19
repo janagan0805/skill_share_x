@@ -20,40 +20,42 @@ class DashboardViewModel : ViewModel() {
     var courses by mutableStateOf<List<CourseData>>(emptyList())
         private set
 
+    // ✅ ACTIVE COURSES = status == "active"
+    val activeCourses: List<CourseData>
+        get() = courses.filter {
+            it.status.equals("active", ignoreCase = true)
+        }
+
     var isLoading by mutableStateOf(false)
         private set
 
-    fun loadDashboardData() {
+    private var hasLoadedOnce = false
+
+    fun loadDashboardData(force: Boolean = false) {
+        if (hasLoadedOnce && !force) return
+
         viewModelScope.launch {
             isLoading = true
             try {
                 val mentorsResponse = AuthApiClient.api.getTopMentors()
                 val coursesResponse = AuthApiClient.api.getAvailableCourses()
 
-                mentors = if (mentorsResponse.success) {
-                    mentorsResponse.data ?: emptyList()
-                } else {
-                    emptyList()
+                if (mentorsResponse.success) {
+                    mentors = mentorsResponse.data ?: mentors
                 }
 
-                courses = if (coursesResponse.success) {
-                    coursesResponse.data ?: emptyList()
-                } else {
-                    emptyList()
+                if (coursesResponse.success) {
+                    courses = coursesResponse.data ?: courses
                 }
 
-            } catch (e: HttpException) {
-                Log.e("DashboardVM", "HTTP ${e.code()} ${e.message()}")
-                mentors = emptyList()
-                courses = emptyList()
+                hasLoadedOnce = true
+
             } catch (e: Exception) {
-                Log.e("DashboardVM", "Unexpected error", e)
-                mentors = emptyList()
-                courses = emptyList()
+                Log.e("DashboardVM", "Dashboard load failed", e)
             } finally {
                 isLoading = false
             }
         }
     }
-
 }
+

@@ -9,7 +9,7 @@ data class CommunityPost(
     @SerializedName("user_name") val userName: String,
     @SerializedName("user_avatar_url") val userAvatarUrl: String?,
     @SerializedName("post_title") val postTitle: String,
-    @SerializedName("post_content_snippet") val postContentSnippet: String? = null, // Used in feed
+//    @SerializedName("post_content_snippet") val postContentSnippet: String? = null, // Used in feed
     @SerializedName("post_content") val postContent: String? = null, // Used in detail
     @SerializedName("post_image") val postImage: String?, // New: Image Path
     @SerializedName("like_count") val likeCount: Int,
