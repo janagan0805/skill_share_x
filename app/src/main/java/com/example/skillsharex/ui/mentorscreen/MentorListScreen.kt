@@ -118,7 +118,9 @@ fun MentorListScreen(
             /* ---------- FILTERED LIST ---------- */
             val filteredList = viewModel.mentors.filter {
                 it.name.contains(searchText, ignoreCase = true) ||
-                        it.skill.contains(searchText, ignoreCase = true)
+                        it.skill.any { skill ->
+                            skill.contains(searchText, ignoreCase = true)
+                        }
             }
 
             /* ---------- MENTOR LIST ---------- */
@@ -194,11 +196,27 @@ fun MentorCard(
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
-                Text(
-                    mentor.skill,
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
+
+                val visibleSkills = mentor.skill.take(1)
+                val remainingSkills = mentor.skill.size - visibleSkills.size
+                Row(
+                    modifier = Modifier.padding(top = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    visibleSkills.forEach { skill ->
+                        SkillChip(skill)
+                    }
+
+                    if (remainingSkills > 0) {
+                        Text(
+                            text = "+$remainingSkills",
+                            fontSize = 12.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(start = 6.dp)
+                        )
+                    }
+                }
+
                 Text(
                     "⭐ ${mentor.rating}",
                     color = BorderBlue,
@@ -214,5 +232,24 @@ fun MentorCard(
                 Text("View", color = Color.White)
             }
         }
+    }
+}
+@Composable
+fun SkillChip(skill: String) {
+    Box(
+        modifier = Modifier
+            .padding(end = 6.dp)
+            .background(
+                color = Color(0xFFEDEDED),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 10.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = skill,
+            fontSize = 12.sp,
+            color = Color.DarkGray,
+            maxLines = 1
+        )
     }
 }

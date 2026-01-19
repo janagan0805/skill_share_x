@@ -61,9 +61,6 @@ fun HomeDashboardScreen(
         viewModel.loadDashboardData()
     }
 
-
-
-
     val swipeState = rememberSwipeRefreshState(
         isRefreshing = viewModel.isLoading
     )
@@ -250,6 +247,9 @@ fun MentorCard(
     ) {
         Column {
 
+            val visibleSkills = mentor.skill.take(2)
+            val remainingSkills = mentor.skill.size - visibleSkills.size
+
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(AuthApiClient.IMAGE_BASE_URL + mentor.imageUrl)
@@ -270,11 +270,24 @@ fun MentorCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Text(
-                    text = "Skills : ${mentor.skill ?: "No Skill"}",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
+                Row(
+                    modifier = Modifier.padding(top = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    visibleSkills.forEach { skill ->
+                        SkillChip(skill)
+                    }
+
+                    if (remainingSkills > 0) {
+                        Text(
+                            text = "+$remainingSkills",
+                            fontSize = 12.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
+                }
+
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -301,6 +314,28 @@ fun MentorCard(
         }
     }
 }
+
+@Composable
+fun SkillChip(skill: String) {
+    Box(
+        modifier = Modifier
+            .padding(end = 6.dp)
+            .background(
+                color = Color(0xFFEDEDED),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = skill,
+            fontSize = 11.sp,
+            color = Color.DarkGray,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
 
 /* ---------------- COURSE CARD ---------------- */
 

@@ -17,5 +17,5 @@ data class MentorData(
     val imageUrl: String?,
     val rating: Double,
     val rating_count: Int,
-    val skill: String
+    val skill: List<String>
 )
