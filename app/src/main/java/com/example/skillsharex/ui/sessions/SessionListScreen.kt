@@ -100,7 +100,6 @@ fun SessionListScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(LavenderBg)
                         .padding(paddingValues)
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)

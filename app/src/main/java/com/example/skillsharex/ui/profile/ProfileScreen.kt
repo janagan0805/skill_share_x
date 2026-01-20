@@ -105,7 +105,6 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFC7C3F9))
     ) {
 
         Spacer(Modifier.height(20.dp))

@@ -31,7 +31,6 @@ fun SettingsScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(LavenderBg)
     ) {
 
         Column {
@@ -41,8 +40,7 @@ fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(HeaderPurple)
-                    .clip(RoundedCornerShape(bottomStart = 30.dp, bottomEnd = 30.dp))
-                    .padding(top = 50.dp, bottom = 20.dp, start = 20.dp, end = 20.dp)
+                    .padding(top = 16.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
             ) {
 
                 Row(verticalAlignment = Alignment.CenterVertically) {

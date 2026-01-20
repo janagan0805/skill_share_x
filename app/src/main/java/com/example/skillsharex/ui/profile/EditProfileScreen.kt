@@ -84,7 +84,6 @@ fun EditProfileScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(LavenderBg)
     ) {
         Column(
             modifier = Modifier.verticalScroll(rememberScrollState())

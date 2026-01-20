@@ -62,13 +62,9 @@ fun MentorListScreen(
         viewModel.loadMentorsList()
     }
 
-
-
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Lavender)
     ) {
 
         Column(modifier = Modifier.fillMaxSize()) {
@@ -109,7 +105,7 @@ fun MentorListScreen(
                     focusedContainerColor = Color.White,
                     unfocusedContainerColor = Color.White,
                     focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
+                    unfocusedIndicatorColor = Color.Transparent,
                 )
             )
 

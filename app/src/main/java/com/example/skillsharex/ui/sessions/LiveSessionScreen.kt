@@ -60,7 +60,6 @@ fun LiveSessionScreen(
     val mentorPhone = session.mentor?.phone ?: ""
 
     Scaffold(
-        containerColor = LavenderBg,
         topBar = {
             TopAppBar(
                 title = { Text("Live Session", color = Color.White) },

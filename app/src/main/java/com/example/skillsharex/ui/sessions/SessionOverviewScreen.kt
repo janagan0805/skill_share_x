@@ -103,7 +103,6 @@ fun SessionOverviewScreen(
     }
 
     Scaffold(
-        containerColor = LavenderBg,
         topBar = {
             TopAppBar(
                 title = { Text("Session Overview", color = Color.White) },
