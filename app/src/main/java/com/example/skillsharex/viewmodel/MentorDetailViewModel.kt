@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.skillsharex.model.CourseData
 import com.example.skillsharex.model.MentorDetail
 import com.example.skillsharex.network.AuthApiClient
 import kotlinx.coroutines.launch
@@ -14,6 +15,9 @@ import kotlinx.coroutines.launch
 class MentorDetailViewModel : ViewModel() {
 
     var mentor by mutableStateOf<MentorDetail?>(null)
+        private set
+
+    var mentorCourses by mutableStateOf<List<CourseData>>(emptyList())
         private set
 
     var isLoading by mutableStateOf(false)
@@ -45,6 +49,25 @@ class MentorDetailViewModel : ViewModel() {
                 Log.e("MentorDetailVM", "Failed to load mentor detail", e)
                 mentor = null
                 errorMessage = "Unable to load mentor details"
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun loadMyCourses(mentorId: Int) {
+        viewModelScope.launch {
+            isLoading = true
+            mentorCourses = try {
+                val response =
+                    AuthApiClient.api.getMyCourses(mentorId)
+                if (response.success) {
+                    response.data ?: emptyList()
+                } else {
+                    emptyList()
+                }
+            } catch (e: Exception) {
+                emptyList()
             } finally {
                 isLoading = false
             }

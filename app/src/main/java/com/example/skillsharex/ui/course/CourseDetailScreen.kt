@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -29,6 +30,7 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
+import com.example.skillsharex.R
 import com.example.skillsharex.navigation.Routes
 import com.example.skillsharex.network.AuthApiClient
 import com.example.skillsharex.viewmodel.CourseDetailViewModel
@@ -45,6 +47,8 @@ fun CourseDetailScreen(
 
     val isSessionsEnabled = false
     val isReviewsEnabled = false
+
+    val isActive = viewModel.courseDetail?.status == "active"
 
     LaunchedEffect(courseId) {
         viewModel.loadCourseDetail(courseId)
@@ -79,6 +83,7 @@ fun CourseDetailScreen(
                 shadowElevation = 8.dp
             ) {
                 Button(
+                    enabled = isActive,
                     onClick = {
                         navController.navigate("${Routes.ENROLLED_COURSE}/$courseId")
                               },
@@ -202,10 +207,9 @@ fun CourseDetailScreen(
                                     .padding(start = 24.dp, bottom = 24.dp)
                             ) {
 
-                                // ACTIVE BADGE
-
+                                // Status badge
                                 Surface(
-                                    color = Color(0xFF22C55E),
+                                    color = if (isActive) Color(0xFF22C55E) else Color(0xFF9CA3AF),
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.padding(
                                         horizontal = 0.dp,
@@ -213,7 +217,7 @@ fun CourseDetailScreen(
                                     )
                                 ) {
                                     Text(
-                                        text = "ACTIVE",
+                                        text = if (isActive) "ACTIVE" else "INACTIVE",
                                         color = Color.White,
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
@@ -240,14 +244,14 @@ fun CourseDetailScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Filled.Star,
+                                        painter = painterResource(id = R.drawable.star_2),
                                         contentDescription = "Rating",
                                         tint = Color(0xFFFACC15),
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = "4.8 · 120 reviews",
+                                        text = "${course.rating} · ${course.rating_count} reviews",
                                         fontSize = 14.sp,
                                         color = Color.White,
                                         fontWeight = FontWeight.Medium
@@ -324,7 +328,7 @@ fun CourseDetailScreen(
                                         color = Color(0xFF111827)
                                     )
                                     Text(
-                                        text = "Senior UI/UX Designer",
+                                        text = "${course.mentor?.skill} Developer",
                                         fontSize = 14.sp,
                                         color = Color(0xFF6B7280)
                                     )
