@@ -42,6 +42,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.skillsharex.ui.course.EnrolledCourseScreen
 import com.example.skillsharex.viewmodel.MentorListViewModel
 import com.example.skillsharex.viewmodel.SessionViewModel
 import com.example.skillsharex.viewmodel.community.CommunityViewModel
@@ -187,21 +188,33 @@ fun MainScaffold(
             }
 
             composable(
-                Routes.COURSE_DETAIL,
+                route = "${Routes.COURSE_DETAIL}/{courseId}",
                 arguments = listOf(navArgument("courseId") { type = NavType.IntType })
             ) {
                 CourseDetailScreen(mainNavController)
             }
 
             composable(
-                Routes.EDIT_COURSE,
+                route = "${Routes.EDIT_COURSE}/{courseId}",
                 arguments = listOf(navArgument("courseId") { type = NavType.IntType })
             ) {
                 EditCourseDetailScreen(mainNavController)
             }
 
             composable(
-                Routes.MENTOR_DETAIL,
+                route = "${Routes.ENROLLED_COURSE}/{courseId}",
+                arguments = listOf(
+                    navArgument("courseId") {
+                        type = NavType.IntType
+                    }
+                )
+            ) {
+                EnrolledCourseScreen(mainNavController)
+            }
+
+
+            composable(
+                route = "${Routes.MENTOR_DETAIL}/{mentorId}",
                 arguments = listOf(navArgument("mentorId") { type = NavType.IntType })
             ) {
                 val mentorId = it.arguments!!.getInt("mentorId")
@@ -213,7 +226,7 @@ fun MainScaffold(
             }
 
             composable(
-                Routes.POST_DETAIL,
+                route = "${Routes.POST_DETAIL}/{postId}",
                 arguments = listOf(navArgument("postId") { type = NavType.StringType })
             ) {
                 val postId = it.arguments!!.getString("postId")!!
@@ -221,7 +234,7 @@ fun MainScaffold(
             }
 
             composable(
-                Routes.SESSION_OVERVIEW,
+                route = "${Routes.SESSION_OVERVIEW}/{sessionId}",
                 arguments = listOf(
                     navArgument("sessionId") { type = NavType.IntType }
                 )
@@ -232,7 +245,7 @@ fun MainScaffold(
             }
 
             composable(
-                Routes.LIVE_SESSION,
+                route = "${Routes.LIVE_SESSION}/{sessionId}",
                 arguments = listOf(
                     navArgument("sessionId") { type = NavType.IntType }
                 )

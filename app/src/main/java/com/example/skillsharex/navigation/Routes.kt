@@ -41,14 +41,15 @@ object Routes {
     const val CHATBOT = "chatbot"
 
     // Dynamic
-    const val COURSE_DETAIL = "courseDetail/{courseId}"
-    const val EDIT_COURSE = "edit_course/{courseId}"
-    const val MENTOR_DETAIL = "mentorDetail/{mentorId}"
-    const val POST_DETAIL = "post_detail/{postId}"
+    const val COURSE_DETAIL = "courseDetail"
+    const val ENROLLED_COURSE = "enrolled_course"
+    const val EDIT_COURSE = "edit_course"
+    const val MENTOR_DETAIL = "mentorDetail"
+    const val POST_DETAIL = "post_detail"
 
     // Sessions
-    const val SESSION_OVERVIEW = "session_overview/{sessionId}"
-    const val LIVE_SESSION = "live_session/{sessionId}"
+    const val SESSION_OVERVIEW = "session_overview"
+    const val LIVE_SESSION = "live_session"
 
 }
 
