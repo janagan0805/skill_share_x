@@ -1,22 +1,26 @@
 package com.example.skillsharex.ui.login
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.skillsharex.network.AuthApiClient
 import com.example.skillsharex.utils.SessionManager
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onLoginSuccess: (String) -> Unit,
@@ -27,139 +31,196 @@ fun LoginScreen(
     val context = androidx.compose.ui.platform.LocalContext.current
     val sessionManager = remember { SessionManager(context) }
 
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var errorMsg by remember { mutableStateOf("") }
-    var loading by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF151358), Color(0xFF241C87))
-                )
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
+    Scaffold(
+        containerColor = Color(0xFFF8F7FF)
+    ) { paddingValues ->
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp)
+                .fillMaxSize()
+                .padding(paddingValues),
+            contentAlignment = Alignment.Center
         ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Login to Your Account",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF111827),
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
 
-            Text(
-                text = "SkillShareX",
-                fontSize = 36.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
+                    Text(
+                        text = "Continue your learning journey",
+                        fontSize = 14.sp,
+                        color = Color(0xFF6B7280),
+                        modifier = Modifier.padding(bottom = 32.dp)
+                    )
 
-            Spacer(modifier = Modifier.height(30.dp))
+                    // Email Field
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Email Address") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        enabled = !isLoading,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF544DCA),
+                            unfocusedBorderColor = Color(0xFFD1D5DB),
+                            focusedLabelColor = Color(0xFF544DCA)
+                        )
+                    )
 
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    cursorColor = Color.White,
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.6f),
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
-                )
-            )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    // Password Field
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Password") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        enabled = !isLoading,
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF544DCA),
+                            unfocusedBorderColor = Color(0xFFD1D5DB),
+                            focusedLabelColor = Color(0xFF544DCA)
+                        )
+                    )
 
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    cursorColor = Color.White,
-                    focusedBorderColor = Color.White,
-                    unfocusedBorderColor = Color.White.copy(alpha = 0.6f),
-                    focusedLabelColor = Color.White,
-                    unfocusedLabelColor = Color.White.copy(alpha = 0.7f)
-                )
-            )
+                    Spacer(modifier = Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            if (errorMsg.isNotEmpty()) {
-                Text(errorMsg, color = Color.Red)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            Button(
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !loading,
-                shape = RoundedCornerShape(12.dp),
-                onClick = {
-
-                    if (email.isBlank() || password.isBlank()) {
-                        errorMsg = "Email and password are required"
-                        return@Button
+                    // Forgot Password Link
+                    TextButton(
+                        onClick = onForgotPasswordClick,
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text(
+                            text = "Forgot Password?",
+                            color = Color(0xFF544DCA),
+                            fontSize = 13.sp
+                        )
                     }
 
-                    loading = true
-                    errorMsg = ""
+                    // Error Message
+                    if (errorMsg.isNotEmpty()) {
+                        Text(
+                            text = errorMsg,
+                            color = Color(0xFFEF4444),
+                            fontSize = 13.sp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp)
+                        )
+                    }
 
-                    scope.launch {
-                        try {
-                            val response = AuthApiClient.api.login(
-                                email = email,
-                                password = password
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Login Button
+                    Button(
+                        onClick = {
+                            if (email.isBlank() || password.isBlank()) {
+                                errorMsg = "Email and password are required"
+                                return@Button
+                            }
+
+                            isLoading = true
+                            errorMsg = ""
+
+                            scope.launch {
+                                try {
+                                    val response = AuthApiClient.api.login(
+                                        email = email,
+                                        password = password
+                                    )
+
+                                    if (response.status == "success") {
+                                        val user = response.user
+                                            ?: throw Exception("User data missing")
+
+                                        // Save session data
+                                        sessionManager.setLoggedIn(true)
+                                        sessionManager.saveUserId(user.id)
+                                        sessionManager.saveUserName(user.full_name)
+                                        sessionManager.saveRole(user.role)
+                                        sessionManager.saveProfileImageUrl(user.profil_image)
+
+                                        onLoginSuccess(user.full_name)
+                                    } else {
+                                        errorMsg = response.message
+                                    }
+                                } catch (e: Exception) {
+                                    errorMsg = e.localizedMessage ?: "Server error"
+                                } finally {
+                                    isLoading = false
+                                }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF544DCA)
+                        ),
+                        enabled = !isLoading
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
                             )
+                        } else {
+                            Text(
+                                text = "Login",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
 
-                            if (response.status == "success") {
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                                val user = response.user
-                                    ?: throw Exception("User data missing")
-
-                                // ✅ SAVE SESSION DATA (CRITICAL)
-                                sessionManager.setLoggedIn(true)
-                                sessionManager.saveUserId(user.id)            // 🔑 THIS FIXES EVERYTHING
-                                sessionManager.saveUserName(user.full_name)
-                                sessionManager.saveRole(user.role)
-                                sessionManager.saveProfileImageUrl(user.profil_image)
-
-                                onLoginSuccess(user.full_name)
-                            }
-                            else {
-                                errorMsg = response.message
-                            }
-
-                        } catch (e: Exception) {
-                            errorMsg = e.localizedMessage ?: ("Server error" + e.message.toString())
-                        } finally {
-                            loading = false
+                    // Sign Up Link
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Don't have an account?",
+                            color = Color(0xFF6B7280),
+                            fontSize = 14.sp
+                        )
+                        TextButton(onClick = onSignUpClick) {
+                            Text(
+                                text = "Sign Up",
+                                color = Color(0xFF544DCA),
+                                fontWeight = FontWeight.Medium
+                            )
                         }
                     }
                 }
-            ) {
-                Text(if (loading) "Please wait..." else "Login")
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            TextButton(onClick = onForgotPasswordClick) {
-                Text("Forgot Password?", color = Color.White)
-            }
-
-            TextButton(onClick = onSignUpClick) {
-                Text("Create new account", color = Color.White)
             }
         }
     }
