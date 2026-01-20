@@ -125,10 +125,6 @@ fun CommunityScreen(
             }
     }
 
-
-
-
-
     Scaffold(
         topBar = { CommunityHeader(navController) },
         floatingActionButton = {

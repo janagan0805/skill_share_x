@@ -6,7 +6,7 @@ import com.example.skillsharex.model.MentorshipRequest
 val sampleRequests = mutableListOf(
     MentorshipRequest(
         requestId = "r1",
-        userAvatar = R.drawable.jana,
+        userAvatar = R.drawable.android,
         userName = "Jana",
         timeAgo = "2h ago",
         requestedSkill = "Android Development",
@@ -14,7 +14,7 @@ val sampleRequests = mutableListOf(
     ),
     MentorshipRequest(
         requestId = "r2",
-        userAvatar = R.drawable.pranav,
+        userAvatar = R.drawable.android,
         userName = "Pranav",
         timeAgo = "5h ago",
         requestedSkill = "UI/UX Design",
@@ -22,7 +22,7 @@ val sampleRequests = mutableListOf(
     ),
     MentorshipRequest(
         requestId = "r3",
-        userAvatar = R.drawable.karthick,
+        userAvatar = R.drawable.android,
         userName = "Karthick",
         timeAgo = "1d ago",
         requestedSkill = "Python",
