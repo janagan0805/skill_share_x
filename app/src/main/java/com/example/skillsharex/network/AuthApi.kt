@@ -195,6 +195,26 @@ interface AuthApi {
     suspend fun getSessionDetail(
         @Query("session_id") sessionId: Int
     ): Response<SessionDetailResponse>
+
+
+    //
+    // In AuthApi.kt
+        // Subscription Part --------------------------------------
+        @GET("api/subscription/get_plans.php")
+        suspend fun getSubscriptionPlans(): ApiResponse<List<SubscriptionPlan>>
+
+        @GET("api/subscription/check_status.php")
+        suspend fun checkSubscriptionStatus(
+            @Query("user_id") userId: Int
+        ): Response<SubscriptionResponse>
+
+        @FormUrlEncoded
+        @POST("api/subscription/subscribe.php")
+        suspend fun subscribe(
+            @Field("user_id") userId: Int,
+            @Field("plan_id") planId: String
+        ): Response<GenericResponse>
+
 }
 
 

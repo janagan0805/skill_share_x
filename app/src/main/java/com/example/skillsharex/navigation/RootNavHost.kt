@@ -2,13 +2,10 @@ package com.example.skillsharex.navigation
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.navigation
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
+
 import com.example.skillsharex.ui.forgot.ForgotPasswordScreen
 import com.example.skillsharex.ui.login.LoginScreen
 import com.example.skillsharex.ui.signup.SignUpScreen
@@ -59,6 +56,7 @@ fun RootNavHost() {
             route = Routes.AUTH_GRAPH,
             startDestination = Routes.LOGIN
         ) {
+
             composable(Routes.LOGIN) {
                 LoginScreen(
                     onLoginSuccess = {
@@ -80,15 +78,14 @@ fun RootNavHost() {
             }
 
             composable(Routes.FORGOT_PASSWORD) {
-                ForgotPasswordScreen(
-                    onBackToLogin = { rootNavController.popBackStack() }
-                )
+                ForgotPasswordScreen {
+                    rootNavController.popBackStack()
+                }
             }
         }
 
         composable(Routes.MAIN_GRAPH) {
-            // 🔑 ROOT CONTROLLER PASSED DOWN
-            MainScaffold(rootNavController = rootNavController)
+            MainScaffold(rootNavController)
         }
     }
 }

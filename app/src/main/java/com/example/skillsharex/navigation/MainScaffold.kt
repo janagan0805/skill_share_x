@@ -4,56 +4,40 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import androidx.navigation.navArgument
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.lifecycle.viewmodel.compose.viewModel
+
 import com.example.skillsharex.ui.chatbot.ChatbotScreen
 import com.example.skillsharex.ui.components.BottomNavBar
-import com.example.skillsharex.ui.community.CommunityScreen
-import com.example.skillsharex.ui.community.CreatePostScreen
-import com.example.skillsharex.ui.community.PostDetailScreen
-import com.example.skillsharex.ui.course.CourseDetailScreen
+import com.example.skillsharex.ui.community.*
+import com.example.skillsharex.ui.course.*
 import com.example.skillsharex.ui.home.HomeDashboardScreen
-import com.example.skillsharex.ui.mentorscreen.MentorDetailScreen
-import com.example.skillsharex.ui.mentorscreen.MentorListScreen
+import com.example.skillsharex.ui.mentorscreen.*
 import com.example.skillsharex.ui.notifications.NotificationsScreen
-import com.example.skillsharex.ui.profile.CreateCourseScreen
-import com.example.skillsharex.ui.profile.EditCourseDetailScreen
-import com.example.skillsharex.ui.profile.EditProfileScreen
-import com.example.skillsharex.ui.profile.ProfileScreen
-import com.example.skillsharex.ui.profile.UserCourseScreen
+import com.example.skillsharex.ui.profile.*
 import com.example.skillsharex.ui.requests.MentorshipRequestsScreen
-import com.example.skillsharex.ui.sessions.LiveSessionScreen
-import com.example.skillsharex.ui.sessions.SessionOverviewScreen
-import com.example.skillsharex.ui.sessions.SessionListScreen
+import com.example.skillsharex.ui.sessions.*
 import com.example.skillsharex.ui.settings.SettingsScreen
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.skillsharex.ui.course.EnrolledCourseScreen
-import com.example.skillsharex.viewmodel.MentorListViewModel
-import com.example.skillsharex.viewmodel.SessionViewModel
+import com.example.skillsharex.ui.subscription.SubscriptionScreen
+
+import com.example.skillsharex.viewmodel.*
 import com.example.skillsharex.viewmodel.community.CommunityViewModel
 import com.example.skillsharex.viewmodel.home.DashboardViewModel
-
 
 @RequiresApi(Build.VERSION_CODES.P)
 @Composable
 fun MainScaffold(
-    rootNavController: NavController // 🔑 THIS FIXES LOGOUT
+    rootNavController: NavController
 ) {
+
     val bottomBarRoutes = setOf(
         Routes.HOME,
         Routes.COMMUNITY,
@@ -62,8 +46,6 @@ fun MainScaffold(
         Routes.PROFILE
     )
 
-
-    /* ---------- VIEWMODELS (TOP LEVEL) ---------- */
     val homeViewModel: DashboardViewModel = viewModel()
     val communityViewModel: CommunityViewModel = viewModel()
     val mentorListViewModel: MentorListViewModel = viewModel()
@@ -72,54 +54,29 @@ fun MainScaffold(
     val context = LocalContext.current
     val mainNavController = rememberNavController()
 
-    val navBackStackEntry =
-        mainNavController.currentBackStackEntryAsState()
-
     val currentRoute =
-        navBackStackEntry.value?.destination?.route
+        mainNavController.currentBackStackEntryAsState().value?.destination?.route
 
     LaunchedEffect(currentRoute) {
         when (currentRoute) {
-            Routes.HOME -> {
-                homeViewModel.loadDashboardData(force = true)
-            }
-
-            Routes.COMMUNITY -> {
-                communityViewModel.loadCommunityFeed(context, force = true)
-            }
-
-            Routes.MENTORS -> {
-                mentorListViewModel.loadMentorsList(force = true)
-            }
-
-            Routes.SESSIONS -> {
-                sessionViewModel.loadSessions(force = true)
-            }
+            Routes.HOME -> homeViewModel.loadDashboardData(true)
+            Routes.COMMUNITY -> communityViewModel.loadCommunityFeed(context, true)
+            Routes.MENTORS -> mentorListViewModel.loadMentorsList(true)
+            Routes.SESSIONS -> sessionViewModel.loadSessions(true)
         }
     }
-
 
     Scaffold(
         bottomBar = {
             AnimatedVisibility(
                 visible = currentRoute in bottomBarRoutes,
-//                enter = slideInVertically { fullHeight -> fullHeight } + fadeIn(),
-//                exit = slideOutVertically { fullHeight -> fullHeight } + fadeOut(),
-                enter = slideInVertically(
-                    animationSpec = tween(300)
-                ) { it } + fadeIn(),
-
-                exit = slideOutVertically(
-                    animationSpec = tween(250)
-                ) { it } + fadeOut()
-
+                enter = slideInVertically(tween(300)) { it } + fadeIn(),
+                exit = slideOutVertically(tween(250)) { it } + fadeOut()
             ) {
                 BottomNavBar(navController = mainNavController)
             }
         }
-    )
-
-    { innerPadding ->
+    ) { innerPadding ->
 
         NavHost(
             navController = mainNavController,
@@ -127,40 +84,29 @@ fun MainScaffold(
             modifier = Modifier.padding(innerPadding)
         ) {
 
+            /* ---------- HOME ---------- */
             composable(Routes.HOME) {
-                HomeDashboardScreen(
-                    navController = mainNavController,
-                    viewModel = homeViewModel
-                )
+                HomeDashboardScreen(mainNavController, homeViewModel)
             }
 
+            /* ---------- COMMUNITY ---------- */
             composable(Routes.COMMUNITY) {
-                CommunityScreen(
-                    navController = mainNavController,
-                    viewModel = communityViewModel
-                )
+                CommunityScreen(mainNavController, communityViewModel)
             }
 
+            /* ---------- MENTORS ---------- */
             composable(Routes.MENTORS) {
-                MentorListScreen(
-                    navController = mainNavController,
-                    viewModel = mentorListViewModel
-                )
+                MentorListScreen(mainNavController, mentorListViewModel)
             }
 
+            /* ---------- SESSIONS ---------- */
             composable(Routes.SESSIONS) {
-                SessionListScreen(
-                    navController = mainNavController,
-                    sessionViewModel = sessionViewModel
-                )
+                SessionListScreen(mainNavController, sessionViewModel)
             }
 
+            /* ---------- PROFILE ---------- */
             composable(Routes.PROFILE) {
-                // 🔑 ROOT CONTROLLER PASSED TO PROFILE
-                ProfileScreen(
-                    navController = mainNavController,
-                    rootNavController = rootNavController
-                )
+                ProfileScreen(mainNavController, rootNavController)
             }
 
             composable(Routes.NOTIFICATIONS) {
@@ -187,78 +133,64 @@ fun MainScaffold(
                 CreateCourseScreen(mainNavController)
             }
 
+            /* ---------- COURSE ---------- */
             composable(
-                route = "${Routes.COURSE_DETAIL}/{courseId}",
+                "${Routes.COURSE_DETAIL}/{courseId}",
                 arguments = listOf(navArgument("courseId") { type = NavType.IntType })
             ) {
                 CourseDetailScreen(mainNavController)
             }
 
             composable(
-                route = "${Routes.EDIT_COURSE}/{courseId}",
+                "${Routes.EDIT_COURSE}/{courseId}",
                 arguments = listOf(navArgument("courseId") { type = NavType.IntType })
             ) {
                 EditCourseDetailScreen(mainNavController)
             }
 
             composable(
-                route = "${Routes.ENROLLED_COURSE}/{courseId}",
-                arguments = listOf(
-                    navArgument("courseId") {
-                        type = NavType.IntType
-                    }
-                )
+                "${Routes.ENROLLED_COURSE}/{courseId}",
+                arguments = listOf(navArgument("courseId") { type = NavType.IntType })
             ) {
                 EnrolledCourseScreen(mainNavController)
             }
 
-
-            composable(
-                route = "${Routes.MENTOR_DETAIL}/{mentorId}",
-                arguments = listOf(navArgument("mentorId") { type = NavType.IntType })
-            ) {
+            /* ---------- MENTOR ---------- */
+            composable("${Routes.MENTOR_DETAIL}/{mentorId}") {
                 val mentorId = it.arguments!!.getInt("mentorId")
                 MentorDetailScreen(mainNavController, mentorId)
             }
 
+            /* ---------- POSTS ---------- */
             composable(Routes.CREATE_POST) {
                 CreatePostScreen(mainNavController)
             }
 
-            composable(
-                route = "${Routes.POST_DETAIL}/{postId}",
-                arguments = listOf(navArgument("postId") { type = NavType.StringType })
-            ) {
+            composable("${Routes.POST_DETAIL}/{postId}") {
                 val postId = it.arguments!!.getString("postId")!!
                 PostDetailScreen(mainNavController, postId)
             }
 
-            composable(
-                route = "${Routes.SESSION_OVERVIEW}/{sessionId}",
-                arguments = listOf(
-                    navArgument("sessionId") { type = NavType.IntType }
-                )
-            ) {
+            /* ---------- SESSIONS ---------- */
+            composable("${Routes.SESSION_OVERVIEW}/{sessionId}") {
                 val sessionId = it.arguments!!.getInt("sessionId")
-
                 SessionOverviewScreen(mainNavController, sessionId)
             }
 
-            composable(
-                route = "${Routes.LIVE_SESSION}/{sessionId}",
-                arguments = listOf(
-                    navArgument("sessionId") { type = NavType.IntType }
-                )
-            ) {
+            composable("${Routes.LIVE_SESSION}/{sessionId}") {
                 val sessionId = it.arguments!!.getInt("sessionId")
-
                 LiveSessionScreen(mainNavController, sessionId.toString())
             }
 
+            /* ---------- CHATBOT ---------- */
             composable(Routes.CHATBOT) {
                 ChatbotScreen(mainNavController)
             }
 
+            /* ---------- SUBSCRIPTION (SAFE VERSION) ---------- */
+            composable("subscription") {
+                SubscriptionScreen(mainNavController) // ✅ NO VIEWMODEL
+            }
         }
     }
 }

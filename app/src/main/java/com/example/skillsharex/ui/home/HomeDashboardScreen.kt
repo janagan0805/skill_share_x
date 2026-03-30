@@ -14,6 +14,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,20 +42,44 @@ import com.example.skillsharex.utils.SessionManager
 import com.example.skillsharex.viewmodel.home.DashboardViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeDashboardScreen(
     navController: NavController,
-    viewModel: DashboardViewModel = viewModel()
+    viewModel: DashboardViewModel
 ) {
     val context = LocalContext.current
     val session = SessionManager(context)
     val userName = session.getUserName()
 
+    var showSubscriptionBanner by remember { mutableStateOf(false) }
+
     // ✅ Load dashboard data
     LaunchedEffect(Unit) {
         viewModel.loadDashboardData()
+    }
+
+    // Check subscription status on launch
+    LaunchedEffect(Unit) {
+        // Mock check: if user is not subscribed, show banner after 2 seconds
+        delay(2000)
+        showSubscriptionBanner = true
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Your existing Dashboard Content...
+
+        if (showSubscriptionBanner) {
+            SubscriptionBanner(
+                onClose = { showSubscriptionBanner = false },
+                onSubscribe = {
+                    showSubscriptionBanner = false
+                    navController.navigate("subscription")
+                }
+            )
+        }
     }
 
     val swipeState = rememberSwipeRefreshState(
@@ -603,6 +629,49 @@ fun MentorCardHorizontal(
                         color = Color(0xFF111827),
                         fontWeight = FontWeight.Medium
                     )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SubscriptionBanner(onClose: () -> Unit, onSubscribe: () -> Unit) {
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.6f)),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+
+        Card(
+            shape = RoundedCornerShape(20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+
+            Column(Modifier.padding(16.dp)) {
+
+                Text("Upgrade to Pro 🚀", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+
+                Text("Unlock premium features & mentorship")
+
+                Spacer(Modifier.height(12.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+
+                    TextButton(onClick = onClose) {
+                        Text("Later")
+                    }
+
+                    Button(onClick = onSubscribe) {
+                        Text("Go Pro")
+                    }
                 }
             }
         }

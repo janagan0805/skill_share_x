@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -171,8 +172,12 @@ fun ProfileScreen(
                             }
                         }
                     }
+                },
+                onSubscription = {
+                    scope.launch {
+                        navController.navigate("subscription")
+                    }
                 }
-
             )
 
             1 -> SessionsTabContent()
@@ -275,6 +280,7 @@ fun ProfileTabContent(
     onUserCourse: () -> Unit,
     onOpenSettings: () -> Unit,
     onLogout: () -> Unit,
+    onSubscription: () -> Unit,
     courses: List<Course>
 ) {
     Column(Modifier.padding(16.dp)) {
@@ -303,6 +309,18 @@ fun ProfileTabContent(
             shape = RoundedCornerShape(14.dp)
         ) {
             Text("Logout")
+        }
+
+        Button(
+            onClick = onSubscription,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700)) // Gold color
+        ) {
+            Icon(Icons.Default.Star, contentDescription = null)
+            Spacer(Modifier.width(8.dp))
+            Text("Subscribe Now", color = Color.Black)
         }
     }
 }
